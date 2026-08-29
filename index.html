@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduQuiz Pro - Paid Quiz & Examination Platform</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Main Application Wrapper -->
+  <div id="app">
+    <!-- Desktop Left Sidebar -->
+    <aside id="desktop-sidebar" class="desktop-sidebar"></aside>
+
+    <!-- Main Wrapper (Top Header + Page Stage) -->
+    <div class="main-wrapper">
+      <!-- Top Sticky Header -->
+      <header id="top-header" class="top-header"></header>
+
+      <!-- Page Content Stage -->
+      <main id="page-stage" class="page-stage"></main>
+    </div>
+
+    <!-- Mobile Bottom Fixed Navigation -->
+    <nav id="mobile-bottom-nav" class="mobile-bottom-nav"></nav>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Dynamic Modal Overlay -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div id="modal-card" class="modal-card"></div>
+  </div>
+
+  <!-- Dynamic Mobile Bottom Sheet Overlay -->
+  <div id="bottom-sheet-overlay" class="bottom-sheet-overlay"></div>
+  <div id="bottom-sheet" class="bottom-sheet"></div>
+
+  <!-- JavaScript Entrypoint -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
