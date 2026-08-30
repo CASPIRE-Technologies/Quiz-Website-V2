@@ -5,43 +5,52 @@ import { CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { loginUser } = useAuth();
+  const { loginUser, registerAccount } = useAuth();
   
   const [isSignUp, setIsSignUp] = useState(false);
-  const [name, setName] = useState('Kasun Perera');
-  const [email, setEmail] = useState('kasun.perera@student.lk');
-  const [password, setPassword] = useState('password123');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [examLevel, setExamLevel] = useState('G.C.E. Ordinary Level (O/L)');
+  const [school, setSchool] = useState('');
+  
   const [isSplashing, setIsSplashing] = useState(false);
+  const [activeAccountName, setActiveAccountName] = useState('');
   const [isAdminMode, setIsAdminMode] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSplashing(true);
 
-    const isAdminAuth = (email.trim() === 'admin' || email.trim() === 'admin@eduquiz.lk') && password.trim() === 'admin@123';
+    const isAdminAuth = (email.trim().toLowerCase() === 'admin' || email.trim().toLowerCase() === 'admin@eduquiz.lk') && password.trim() === 'admin@123';
 
     setTimeout(() => {
       if (isAdminAuth) {
+        setActiveAccountName('System Administrator');
         loginUser({
-          name: 'System Administrator',
           email: 'admin@eduquiz.lk',
-          phone: '+94 11 200 0000',
-          role: 'admin',
-          examLevel: 'Administrator'
+          password: 'admin@123'
         });
-        // Open standalone Admin window
         window.open('/admin', '_blank');
         navigate('/dashboard');
-      } else {
-        loginUser({
-          name: isSignUp ? name : 'Kasun Perera',
-          email,
-          phone: '+94 77 123 4567',
-          role: 'student',
+      } else if (isSignUp) {
+        // Register brand new user account
+        const registered = registerAccount({
+          name: name.trim() || 'New Student',
+          email: email.trim(),
+          password: password.trim(),
           examLevel,
-          school: 'Ananda College, Colombo'
+          school: school.trim() || 'Sri Lankan School'
         });
+        setActiveAccountName(registered.name);
+        navigate('/dashboard');
+      } else {
+        // Sign in existing registered account
+        const loggedIn = loginUser({
+          email: email.trim(),
+          password: password.trim()
+        });
+        setActiveAccountName(loggedIn.name);
         navigate('/dashboard');
       }
     }, 950);
@@ -53,8 +62,15 @@ export default function AuthPage() {
     setIsAdminMode(true);
   };
 
+  const fillDemoStudent = () => {
+    setEmail('kasun.perera@student.lk');
+    setPassword('password123');
+    setIsAdminMode(false);
+  };
+
   return (
     <div className="solve-auth-stage">
+      {/* Dynamic Liquid Color Splash Overlay */}
       {isSplashing && (
         <div style={{
           position: 'fixed',
@@ -101,43 +117,65 @@ export default function AuthPage() {
               <CheckCircle2 size={38} />
             </div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {email === 'admin' ? 'Opening Admin Window!' : (isSignUp ? 'Account Created!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
+              {isSignUp ? 'Registration Successful!' : 'Welcome Back!'} <Sparkles size={24} color="#F59E0B" />
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              {email === 'admin' ? 'Launching standalone Admin Console...' : 'Authenticating Kasun Perera...'}
+              Logging in as <strong>{activeAccountName || name || 'Registered Account'}</strong>...
             </p>
           </div>
         </div>
       )}
 
+      {/* Main Solve It Smart Animated Auth Card Container */}
       <div className={`solve-auth-card ${isSignUp ? 'right-panel-active' : ''}`}>
         
         {/* SIGN UP FORM */}
         <div className="form-container sign-up-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Create Account</h2>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Use your email for registration</p>
+              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Create Your Account</h2>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Register your personal student account</p>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} required />
+              <label className="form-label">Full Student Name</label>
+              <input
+                type="text"
+                className="form-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Amal Perera"
+                required
+              />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Email or Phone</label>
-              <input type="text" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label className="form-label">Email Address / Username</label>
+              <input
+                type="email"
+                className="form-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="amal@student.lk"
+                required
+              />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Password</label>
-              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <label className="form-label">Create Password</label>
+              <input
+                type="password"
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Exam Level</label>
+              <label className="form-label">Target Examination Level</label>
               <select className="form-input" value={examLevel} onChange={(e) => setExamLevel(e.target.value)}>
                 <option value="G.C.E. Ordinary Level (O/L)">G.C.E. Ordinary Level (O/L)</option>
                 <option value="G.C.E. Advanced Level (A/L)">G.C.E. Advanced Level (A/L)</option>
@@ -146,7 +184,7 @@ export default function AuthPage() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '8px' }}>
-              Sign Up
+              Register & Access Dashboard
             </button>
           </form>
         </div>
@@ -157,34 +195,55 @@ export default function AuthPage() {
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
               <h2 style={{ fontSize: '24px', fontWeight: 800 }}>
-                {isAdminMode ? 'Admin Console Login' : 'Welcome Back'}
+                {isAdminMode ? 'Admin Console Login' : 'Sign In'}
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                {isAdminMode ? 'Opens Admin Panel in a separate standalone window' : 'Enter your details to sign in'}
+                {isAdminMode ? 'Opens Admin Panel in a separate standalone window' : 'Sign in with your registered account'}
               </p>
             </div>
 
             <div className="form-group">
               <label className="form-label">Email / Username</label>
-              <input type="text" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin or student@lk" required />
+              <input
+                type="text"
+                className="form-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. kasun.perera@student.lk or admin"
+                required
+              />
             </div>
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+              <input
+                type="password"
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '16px' }}>
-              {isAdminMode ? 'Launch Standalone Admin Window' : 'Sign In'}
+              {isAdminMode ? 'Launch Standalone Admin Window' : 'Sign In to My Account'}
             </button>
 
-            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around', gap: '8px', marginTop: '16px' }}>
+              <button
+                type="button"
+                onClick={fillDemoStudent}
+                style={{ border: 'none', background: 'transparent', color: 'var(--color-primary)', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}
+              >
+                Kasun Account
+              </button>
               <button
                 type="button"
                 onClick={fillAdminCredentials}
                 style={{ border: 'none', background: 'transparent', color: 'var(--color-secondary)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               >
-                <ShieldCheck size={14} /> Open Separate Admin Window (admin / admin@123)
+                <ShieldCheck size={14} /> Admin Account (admin)
               </button>
             </div>
           </form>
@@ -198,7 +257,7 @@ export default function AuthPage() {
               <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
               <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Welcome Back!</h2>
               <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
-                To keep connected with us please sign in with your student credentials
+                Sign in with your registered student account to access your model papers
               </p>
               <button className="ghost-btn" onClick={() => setIsSignUp(false)}>
                 Sign In
@@ -207,12 +266,12 @@ export default function AuthPage() {
 
             <div className="overlay-panel overlay-right">
               <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Hello, Student!</h2>
+              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Hello, Scholar!</h2>
               <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
-                Enter your details and start your examination preparation journey with EduQuiz Pro
+                Register your own personal account to begin timed quizzes and track results
               </p>
               <button className="ghost-btn" onClick={() => setIsSignUp(true)}>
-                Sign Up
+                Create Account
               </button>
             </div>
 
