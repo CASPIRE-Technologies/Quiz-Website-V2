@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -32,19 +32,18 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="auth-page-wrapper">
-      {/* Full-Screen Expanding Liquid Color Splash Overlay */}
+    <div className="solve-auth-stage">
+      {/* Dynamic Liquid Color Splash Overlay */}
       {isSplashing && (
         <div style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 90,
+          zIndex: 999,
           pointerEvents: 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          {/* Expanding Radial Gradient Circle Ripple */}
           <div style={{
             position: 'absolute',
             width: '100px',
@@ -55,10 +54,9 @@ export default function AuthPage() {
             boxShadow: '0 0 120px rgba(124, 58, 237, 0.9)'
           }} />
 
-          {/* Success Glassmorphic Popup */}
           <div style={{
             position: 'relative',
-            zIndex: 100,
+            zIndex: 1000,
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(20px)',
             padding: '36px 52px',
@@ -77,8 +75,7 @@ export default function AuthPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 16px auto',
-              boxShadow: '0 8px 20px rgba(22, 163, 74, 0.25)'
+              margin: '0 auto 16px auto'
             }}>
               <CheckCircle2 size={38} />
             </div>
@@ -92,96 +89,104 @@ export default function AuthPage() {
         </div>
       )}
 
-      {/* Sliding Colored Hero Panel (Swaps positions left <-> right) */}
-      <div className={`auth-hero-panel ${isSignUp ? 'active-signup' : ''} ${isSplashing ? 'splashing-login' : ''}`}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)' }}>EQ</div>
-          <span style={{ fontSize: '22px', fontWeight: 800 }}>EduQuiz Pro</span>
-        </div>
-
-        <div>
-          <h1 style={{ fontSize: '42px', fontWeight: 800, lineHeight: 1.15, marginBottom: '20px' }}>
-            {isSignUp ? 'Join Thousands of Sri Lankan Scholars.' : 'Learn. Practice.\nSucceed.'}
-          </h1>
-          <p style={{ fontSize: '18px', opacity: 0.95, lineHeight: 1.6, maxWidth: '520px' }}>
-            {isSignUp
-              ? 'Create your free account today to access Grade 5, O/L, and A/L model examination papers with live timed feedback.'
-              : 'Prepare smarter for Sri Lankan examinations with timed quizzes, instant results, and detailed step-by-step explanations.'}
-          </p>
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="btn btn-outline"
-            style={{ marginTop: '24px', borderColor: 'white', color: 'white', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(10px)' }}
-          >
-            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"} <ArrowRight size={16} />
-          </button>
-        </div>
-
-        <div style={{ fontSize: '13px', opacity: 0.8 }}>© 2026 EduQuiz Pro Inc. All rights reserved.</div>
-      </div>
-
-      {/* Sliding Form Container Panel (Swaps positions right <-> left) */}
-      <div className={`auth-form-panel ${isSignUp ? 'active-signup' : ''}`}>
-        <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '36px', opacity: isSplashing ? 0.3 : 1, transition: 'opacity 0.3s ease' }}>
-          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-            <div className="logo-badge" style={{ margin: '0 auto 16px auto', width: '48px', height: '48px', fontSize: '24px' }}>EQ</div>
-            <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
-              {isSignUp ? 'Create Student Account' : 'Welcome Back'}
-            </h2>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-              {isSignUp ? 'Enter your details to register on EduQuiz Pro' : 'Enter your details to access your account'}
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            {isSignUp && (
-              <div className="form-group">
-                <label className="form-label">Full Student Name</label>
-                <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Kasun Perera" required disabled={isSplashing} />
-              </div>
-            )}
+      {/* Main Solve It Smart Animated Auth Card Container */}
+      <div className={`solve-auth-card ${isSignUp ? 'right-panel-active' : ''}`}>
+        
+        {/* SIGN UP FORM (Left side when active) */}
+        <div className="form-container sign-up-container">
+          <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
+              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Create Account</h2>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Use your email for registration</p>
+            </div>
 
             <div className="form-group">
-              <label className="form-label">Email or Phone Number</label>
-              <input type="text" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="student@school.lk" required disabled={isSplashing} />
+              <label className="form-label">Full Name</label>
+              <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email or Phone</label>
+              <input type="text" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isSplashing} />
+              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
 
-            {isSignUp && (
-              <div className="form-group">
-                <label className="form-label">Target Examination Level</label>
-                <select className="form-input" value={examLevel} onChange={(e) => setExamLevel(e.target.value)}>
-                  <option value="G.C.E. Ordinary Level (O/L)">G.C.E. Ordinary Level (O/L)</option>
-                  <option value="G.C.E. Advanced Level (A/L)">G.C.E. Advanced Level (A/L)</option>
-                  <option value="Grade 5 Scholarship">Grade 5 Scholarship</option>
-                </select>
-              </div>
-            )}
+            <div className="form-group">
+              <label className="form-label">Exam Level</label>
+              <select className="form-input" value={examLevel} onChange={(e) => setExamLevel(e.target.value)}>
+                <option value="G.C.E. Ordinary Level (O/L)">G.C.E. Ordinary Level (O/L)</option>
+                <option value="G.C.E. Advanced Level (A/L)">G.C.E. Advanced Level (A/L)</option>
+                <option value="Grade 5 Scholarship">Grade 5 Scholarship</option>
+              </select>
+            </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block btn-lg"
-              style={{ marginTop: '12px', overflow: 'hidden', position: 'relative' }}
-              disabled={isSplashing}
-            >
-              {isSplashing ? 'Authenticating...' : (isSignUp ? 'Create Account & Sign In' : 'Sign In')}
+            <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '8px' }}>
+              Sign Up
             </button>
           </form>
+        </div>
 
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              style={{ border: 'none', background: 'transparent', color: 'var(--color-primary)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
-            >
-              {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+        {/* SIGN IN FORM (Right side when active) */}
+        <div className="form-container sign-in-container">
+          <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
+              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Welcome Back</h2>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Enter your details to sign in</p>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email or Phone</label>
+              <input type="text" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '16px' }}>
+              Sign In
             </button>
+          </form>
+        </div>
+
+        {/* OVERLAY SLIDING PANEL (Slides left <-> right) */}
+        <div className="overlay-container">
+          <div className="overlay">
+            
+            {/* OVERLAY LEFT (Shown when Sign Up form is active) */}
+            <div className="overlay-panel overlay-left">
+              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
+              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Welcome Back!</h2>
+              <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
+                To keep connected with us please sign in with your student credentials
+              </p>
+              <button className="ghost-btn" onClick={() => setIsSignUp(false)}>
+                Sign In
+              </button>
+            </div>
+
+            {/* OVERLAY RIGHT (Shown when Sign In form is active) */}
+            <div className="overlay-panel overlay-right">
+              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
+              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Hello, Student!</h2>
+              <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
+                Enter your details and start your examination preparation journey with EduQuiz Pro
+              </p>
+              <button className="ghost-btn" onClick={() => setIsSignUp(true)}>
+                Sign Up
+              </button>
+            </div>
+
           </div>
         </div>
+
       </div>
     </div>
   );
