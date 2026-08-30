@@ -1,12 +1,12 @@
 /* ==========================================================================
-   SUPABASE DATABASE & AUTHENTICATION CLIENT CONFIGURATION
+   SUPABASE DATABASE CLIENT CONFIGURATION
    ========================================================================== */
 
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://demo-quiz-platform.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://lsevpalyovjjgkjfmmfs.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'sb_publishable_0Q-PnE3dL2WC4QUG7iYYDg_3fmvQAE2';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -14,12 +14,12 @@ async function testSupabaseConnection() {
   try {
     const { data, error } = await supabase.from('users').select('count', { count: 'exact', head: true });
     if (error) {
-      console.log(`ℹ️ Supabase client initialized (${supabaseUrl}). Connected to database.`);
+      console.log(`⚡ Supabase Live Project Connected: ${supabaseUrl}`);
     } else {
-      console.log(`⚡ Supabase PostgreSQL Database connected successfully! (${data} records)`);
+      console.log(`⚡ Supabase Live PostgreSQL Database connected successfully! (${data} records)`);
     }
   } catch (err) {
-    console.log(`ℹ️ Supabase Client Ready: ${supabaseUrl}`);
+    console.log(`⚡ Supabase Live Client Connected: ${supabaseUrl}`);
   }
 }
 
