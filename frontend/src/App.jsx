@@ -24,9 +24,10 @@ import AdminQuizWizardPage from './pages/AdminQuizWizardPage';
 
 function LayoutShell({ children }) {
   const location = useLocation();
-  const isAuthOrQuiz = location.pathname === '/login' || location.pathname.includes('/attempt');
+  // Exclude Login, Quiz Taking Attempt, AND Admin routes from Student Layout
+  const isStandalonePage = location.pathname === '/login' || location.pathname.includes('/attempt') || location.pathname.startsWith('/admin');
 
-  if (isAuthOrQuiz) {
+  if (isStandalonePage) {
     return <main>{children}</main>;
   }
 

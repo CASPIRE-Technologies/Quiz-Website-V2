@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, BookOpen, Award, User, ShieldAlert, LogOut, LogIn } from 'lucide-react';
+import { Home, Search, BookOpen, Award, User, LogOut, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function DesktopSidebar() {
@@ -38,16 +38,6 @@ export default function DesktopSidebar() {
         <Link to="/profile" className={`nav-item ${isCurrent('/profile') ? 'active' : ''}`}>
           <User size={18} /> <span>Student Profile</span>
         </Link>
-
-        {/* ADMIN PORTAL TAB (HIDDEN FROM NORMAL STUDENTS - SHOWN ONLY TO ADMINS) */}
-        {user?.role === 'admin' && (
-          <>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-muted)', padding: '8px 12px', marginTop: '16px' }}>Management</div>
-            <Link to="/admin" className={`nav-item ${location.pathname.startsWith('/admin') ? 'active' : ''}`} style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontWeight: 700 }}>
-              <ShieldAlert size={18} /> <span>Admin Portal</span>
-            </Link>
-          </>
-        )}
       </div>
 
       <div style={{ padding: '16px 12px', borderTop: '1px solid var(--color-border)' }}>

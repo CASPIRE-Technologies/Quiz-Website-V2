@@ -30,7 +30,9 @@ export default function AuthPage() {
           role: 'admin',
           examLevel: 'Administrator'
         });
-        navigate('/admin');
+        // Open standalone Admin window
+        window.open('/admin', '_blank');
+        navigate('/dashboard');
       } else {
         loginUser({
           name: isSignUp ? name : 'Kasun Perera',
@@ -53,7 +55,6 @@ export default function AuthPage() {
 
   return (
     <div className="solve-auth-stage">
-      {/* Dynamic Liquid Color Splash Overlay */}
       {isSplashing && (
         <div style={{
           position: 'fixed',
@@ -100,19 +101,18 @@ export default function AuthPage() {
               <CheckCircle2 size={38} />
             </div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {email === 'admin' ? 'Admin Access Granted!' : (isSignUp ? 'Account Created!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
+              {email === 'admin' ? 'Opening Admin Window!' : (isSignUp ? 'Account Created!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              Logging into EduQuiz Pro...
+              {email === 'admin' ? 'Launching standalone Admin Console...' : 'Authenticating Kasun Perera...'}
             </p>
           </div>
         </div>
       )}
 
-      {/* Main Solve It Smart Animated Auth Card Container */}
       <div className={`solve-auth-card ${isSignUp ? 'right-panel-active' : ''}`}>
         
-        {/* SIGN UP FORM (Left side when active) */}
+        {/* SIGN UP FORM */}
         <div className="form-container sign-up-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -151,16 +151,16 @@ export default function AuthPage() {
           </form>
         </div>
 
-        {/* SIGN IN FORM (Right side when active) */}
+        {/* SIGN IN FORM */}
         <div className="form-container sign-in-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
               <h2 style={{ fontSize: '24px', fontWeight: 800 }}>
-                {isAdminMode ? 'Admin Portal Login' : 'Welcome Back'}
+                {isAdminMode ? 'Admin Console Login' : 'Welcome Back'}
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                {isAdminMode ? 'Sign in with administrator credentials' : 'Enter your details to sign in'}
+                {isAdminMode ? 'Opens Admin Panel in a separate standalone window' : 'Enter your details to sign in'}
               </p>
             </div>
 
@@ -175,7 +175,7 @@ export default function AuthPage() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '16px' }}>
-              {isAdminMode ? 'Login as Administrator' : 'Sign In'}
+              {isAdminMode ? 'Launch Standalone Admin Window' : 'Sign In'}
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '16px' }}>
@@ -184,17 +184,16 @@ export default function AuthPage() {
                 onClick={fillAdminCredentials}
                 style={{ border: 'none', background: 'transparent', color: 'var(--color-secondary)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               >
-                <ShieldCheck size={14} /> Quick Admin Login (admin / admin@123)
+                <ShieldCheck size={14} /> Open Separate Admin Window (admin / admin@123)
               </button>
             </div>
           </form>
         </div>
 
-        {/* OVERLAY SLIDING PANEL (Slides left <-> right) */}
+        {/* OVERLAY SLIDING PANEL */}
         <div className="overlay-container">
           <div className="overlay">
             
-            {/* OVERLAY LEFT (Shown when Sign Up form is active) */}
             <div className="overlay-panel overlay-left">
               <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
               <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Welcome Back!</h2>
@@ -206,7 +205,6 @@ export default function AuthPage() {
               </button>
             </div>
 
-            {/* OVERLAY RIGHT (Shown when Sign In form is active) */}
             <div className="overlay-panel overlay-right">
               <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
               <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Hello, Student!</h2>
