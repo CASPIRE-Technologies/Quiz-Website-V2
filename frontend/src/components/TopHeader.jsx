@@ -72,7 +72,6 @@ export default function TopHeader() {
                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-main)' }}>{user.name}</span>
                 </div>
 
-                {/* Dropdown Menu */}
                 {userDropdownOpen && (
                   <div
                     style={{
@@ -91,6 +90,7 @@ export default function TopHeader() {
                     <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--color-border)', marginBottom: '4px' }}>
                       <div style={{ fontWeight: 700, fontSize: '14px' }}>{user.name}</div>
                       <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{user.email}</div>
+                      {user.role === 'admin' && <span className="badge badge-primary" style={{ marginTop: '4px' }}>Admin</span>}
                     </div>
                     <button
                       onClick={() => { setUserDropdownOpen(false); navigate('/profile'); }}
@@ -98,6 +98,14 @@ export default function TopHeader() {
                     >
                       <User size={16} /> Student Profile
                     </button>
+                    {user.role === 'admin' && (
+                      <button
+                        onClick={() => { setUserDropdownOpen(false); navigate('/admin'); }}
+                        style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--color-primary)', fontWeight: 700, borderRadius: '8px', cursor: 'pointer' }}
+                      >
+                        <ShieldAlert size={16} /> Admin Portal
+                      </button>
+                    )}
                     <button
                       onClick={handleSignOut}
                       style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--color-error)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer' }}
@@ -160,9 +168,12 @@ export default function TopHeader() {
             <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="nav-item">
               <User size={18} /> <span>Student Profile</span>
             </Link>
-            <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="nav-item" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontWeight: 700 }}>
-              <ShieldAlert size={18} /> <span>Admin Portal</span>
-            </Link>
+
+            {user?.role === 'admin' && (
+              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="nav-item" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontWeight: 700 }}>
+                <ShieldAlert size={18} /> <span>Admin Portal</span>
+              </Link>
+            )}
 
             {user ? (
               <button onClick={() => { logoutUser(); setMobileMenuOpen(false); navigate('/login'); }} className="nav-item" style={{ color: 'var(--color-error)', marginTop: 'auto', width: '100%' }}>

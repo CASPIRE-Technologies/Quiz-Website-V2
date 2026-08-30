@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Copy, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign } from 'lucide-react';
+import { Plus, Search, Copy, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  
+  const { user, loginUser } = useAuth();
+
+  // Admin authentication state inside route gate
+  const [adminUser, setAdminUser] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   const [activeTab, setActiveTab] = useState('quizzes');
   const [stats, setStats] = useState({ totalStudents: 1420, totalQuizzes: 48, revenueLKR: 1245000, completedAttempts: 3410, averageScore: 76.4 });
   const [quizzesList, setQuizzesList] = useState([]);
@@ -36,6 +43,82 @@ export default function AdminDashboardPage() {
     }
     loadData();
   }, []);
+
+  const handleAdminGateSubmit = (e) => {
+    e.preventDefault();
+    if ((adminUser.trim() === 'admin' || adminUser.trim() === 'admin@eduquiz.lk') && adminPass.trim() === 'admin@123') {
+      loginUser({
+        name: 'System Administrator',
+        email: 'admin@eduquiz.lk',
+        phone: '+94 11 200 0000',
+        role: 'admin',
+        examLevel: 'Administrator'
+      });
+      setLoginError('');
+    } else {
+      setLoginError('Invalid Administrator credentials! Enter admin & admin@123');
+    }
+  };
+
+  // IF USER IS NOT AN ADMIN, SHOW ADMIN AUTHENTICATION GATE SCREEN
+  if (user?.role !== 'admin') {
+    return (
+      <div style={{ maxWidth: '440px', margin: '40px auto' }}>
+        <div className="card" style={{ padding: '36px', borderTop: '6px solid var(--color-primary)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+              <Lock size={28} />
+            </div>
+            <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Admin Portal Authentication</h2>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+              Sign in with Administrator credentials to access the management portal.
+            </p>
+          </div>
+
+          {loginError && (
+            <div style={{ backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', fontWeight: 600, textAlign: 'center' }}>
+              {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleAdminGateSubmit}>
+            <div className="form-group">
+              <label className="form-label">Admin Username / Email</label>
+              <input
+                type="text"
+                className="form-input"
+                value={adminUser}
+                onChange={(e) => setAdminUser(e.target.value)}
+                placeholder="admin"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input
+                type="password"
+                className="form-input"
+                value={adminPass}
+                onChange={(e) => setAdminPass(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '8px' }}>
+              <ShieldCheck size={18} /> Unlock Admin Portal
+            </button>
+          </form>
+
+          <div style={{ marginTop: '20px', padding: '12px', backgroundColor: 'var(--color-bg)', borderRadius: '10px', fontSize: '12px', color: 'var(--color-text-muted)', textAlign: 'center', border: '1px solid var(--color-border)' }}>
+            <strong>Demo Credentials:</strong><br />
+            Username: <code style={{ fontWeight: 700, color: 'var(--color-primary)' }}>admin</code> | Password: <code style={{ fontWeight: 700, color: 'var(--color-primary)' }}>admin@123</code>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const filteredQuizzes = quizzesList.filter(q => {
     const matchesSearch = q.title.toLowerCase().includes(quizSearch.toLowerCase()) || q.subjectName.toLowerCase().includes(quizSearch.toLowerCase());
@@ -189,7 +272,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-outline btn-sm" title="Toggle Publish Status" onClick={() => handleTogglePublish(quiz.id)}>
+                          <button className="btn btn-outline btn-sm" title="Toggle Status" onClick={() => handleTogglePublish(quiz.id)}>
                             {isPublished ? <XCircle size={14} color="var(--color-warning)" /> : <CheckCircle size={14} color="var(--color-success)" />}
                           </button>
                           <button className="btn btn-outline btn-sm" title="Duplicate Paper" onClick={() => handleDuplicateQuiz(quiz)}>

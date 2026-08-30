@@ -39,10 +39,15 @@ export default function DesktopSidebar() {
           <User size={18} /> <span>Student Profile</span>
         </Link>
 
-        <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-muted)', padding: '8px 12px', marginTop: '16px' }}>Management</div>
-        <Link to="/admin" className={`nav-item ${location.pathname.startsWith('/admin') ? 'active' : ''}`}>
-          <ShieldAlert size={18} /> <span>Admin Portal</span>
-        </Link>
+        {/* ADMIN PORTAL TAB (HIDDEN FROM NORMAL STUDENTS - SHOWN ONLY TO ADMINS) */}
+        {user?.role === 'admin' && (
+          <>
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-muted)', padding: '8px 12px', marginTop: '16px' }}>Management</div>
+            <Link to="/admin" className={`nav-item ${location.pathname.startsWith('/admin') ? 'active' : ''}`} style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontWeight: 700 }}>
+              <ShieldAlert size={18} /> <span>Admin Portal</span>
+            </Link>
+          </>
+        )}
       </div>
 
       <div style={{ padding: '16px 12px', borderTop: '1px solid var(--color-border)' }}>

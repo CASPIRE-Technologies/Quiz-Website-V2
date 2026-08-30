@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Sparkles } from 'lucide-react';
+import { CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -13,22 +13,42 @@ export default function AuthPage() {
   const [password, setPassword] = useState('password123');
   const [examLevel, setExamLevel] = useState('G.C.E. Ordinary Level (O/L)');
   const [isSplashing, setIsSplashing] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSplashing(true);
 
+    const isAdminAuth = (email.trim() === 'admin' || email.trim() === 'admin@eduquiz.lk') && password.trim() === 'admin@123';
+
     setTimeout(() => {
-      loginUser({
-        name: isSignUp ? name : 'Kasun Perera',
-        email,
-        phone: '+94 77 123 4567',
-        role: 'student',
-        examLevel,
-        school: 'Ananda College, Colombo'
-      });
-      navigate('/dashboard');
+      if (isAdminAuth) {
+        loginUser({
+          name: 'System Administrator',
+          email: 'admin@eduquiz.lk',
+          phone: '+94 11 200 0000',
+          role: 'admin',
+          examLevel: 'Administrator'
+        });
+        navigate('/admin');
+      } else {
+        loginUser({
+          name: isSignUp ? name : 'Kasun Perera',
+          email,
+          phone: '+94 77 123 4567',
+          role: 'student',
+          examLevel,
+          school: 'Ananda College, Colombo'
+        });
+        navigate('/dashboard');
+      }
     }, 950);
+  };
+
+  const fillAdminCredentials = () => {
+    setEmail('admin');
+    setPassword('admin@123');
+    setIsAdminMode(true);
   };
 
   return (
@@ -80,10 +100,10 @@ export default function AuthPage() {
               <CheckCircle2 size={38} />
             </div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {isSignUp ? 'Account Created!' : 'Welcome Back!'} <Sparkles size={24} color="#F59E0B" />
+              {email === 'admin' ? 'Admin Access Granted!' : (isSignUp ? 'Account Created!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              Authenticating {isSignUp ? name : 'Kasun Perera'}...
+              Logging into EduQuiz Pro...
             </p>
           </div>
         </div>
@@ -136,23 +156,37 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Welcome Back</h2>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Enter your details to sign in</p>
+              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>
+                {isAdminMode ? 'Admin Portal Login' : 'Welcome Back'}
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                {isAdminMode ? 'Sign in with administrator credentials' : 'Enter your details to sign in'}
+              </p>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Email or Phone</label>
-              <input type="text" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label className="form-label">Email / Username</label>
+              <input type="text" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin or student@lk" required />
             </div>
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '16px' }}>
-              Sign In
+              {isAdminMode ? 'Login as Administrator' : 'Sign In'}
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+              <button
+                type="button"
+                onClick={fillAdminCredentials}
+                style={{ border: 'none', background: 'transparent', color: 'var(--color-secondary)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
+                <ShieldCheck size={14} /> Quick Admin Login (admin / admin@123)
+              </button>
+            </div>
           </form>
         </div>
 
