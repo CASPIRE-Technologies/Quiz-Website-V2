@@ -1,17 +1,17 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, BookOpen, Award, User, ShieldAlert, LogOut } from 'lucide-react';
+import { Home, Search, BookOpen, Award, User, ShieldAlert, LogOut, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function DesktopSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logoutUser } = useAuth();
+  const { user, logoutUser } = useAuth();
 
   const isCurrent = (path) => location.pathname === path;
 
   return (
-    <aside class="desktop-sidebar">
+    <aside className="desktop-sidebar">
       <div className="sidebar-header">
         <div className="logo-badge">EQ</div>
         <div>
@@ -46,9 +46,15 @@ export default function DesktopSidebar() {
       </div>
 
       <div style={{ padding: '16px 12px', borderTop: '1px solid var(--color-border)' }}>
-        <button onClick={() => { logoutUser(); navigate('/login'); }} className="nav-item" style={{ color: 'var(--color-error)', width: '100%' }}>
-          <LogOut size={18} /> <span>Logout</span>
-        </button>
+        {user ? (
+          <button onClick={() => { logoutUser(); navigate('/login'); }} className="nav-item" style={{ color: 'var(--color-error)', width: '100%', cursor: 'pointer' }}>
+            <LogOut size={18} /> <span>Sign Out</span>
+          </button>
+        ) : (
+          <button onClick={() => navigate('/login')} className="btn btn-primary btn-block">
+            <LogIn size={18} /> <span>Sign In</span>
+          </button>
+        )}
       </div>
     </aside>
   );
