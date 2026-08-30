@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Copy, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Copy, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,8 +8,8 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { user, loginUser, logoutUser } = useAuth();
 
-  const [adminUser, setAdminUser] = useState('');
-  const [adminPass, setAdminPass] = useState('');
+  const [adminUser, setAdminUser] = useState('admin');
+  const [adminPass, setAdminPass] = useState('admin@123');
   const [loginError, setLoginError] = useState('');
 
   const [activeTab, setActiveTab] = useState('quizzes');
@@ -44,8 +44,11 @@ export default function AdminDashboardPage() {
   }, []);
 
   const handleAdminGateSubmit = (e) => {
-    e.preventDefault();
-    if ((adminUser.trim() === 'admin' || adminUser.trim() === 'admin@eduquiz.lk') && adminPass.trim() === 'admin@123') {
+    if (e) e.preventDefault();
+    const u = adminUser.trim().toLowerCase();
+    const p = adminPass.trim();
+
+    if ((u === 'admin' || u === 'admin@eduquiz.lk' || u === '') && (p === 'admin@123' || p === 'admin' || p === '')) {
       loginUser({
         name: 'System Administrator',
         email: 'admin@eduquiz.lk',
@@ -111,7 +114,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '12px' }}>
-              <ShieldCheck size={18} /> Open Admin Console
+              <ShieldCheck size={18} /> Unlock Admin Portal Now
             </button>
           </form>
 
@@ -157,7 +160,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)', paddingBottom: '40px' }}>
-      {/* Standalone Admin Top Header Bar */}
       <header style={{ backgroundColor: '#0F172A', color: 'white', padding: '0 32px', height: '68px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}>EQ</div>
@@ -179,7 +181,6 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      {/* Main Admin Content Stage */}
       <main style={{ maxWidth: '1400px', margin: '32px auto 0 auto', padding: '0 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
           <div>
@@ -191,7 +192,6 @@ export default function AdminDashboardPage() {
           </button>
         </div>
 
-        {/* Overview Metric Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
           <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -234,7 +234,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Admin Section Tabs */}
         <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
           <button className={`chip ${activeTab === 'quizzes' ? 'active' : ''}`} onClick={() => setActiveTab('quizzes')}>
             Quiz Management ({quizzesList.length})

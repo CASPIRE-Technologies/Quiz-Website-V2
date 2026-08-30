@@ -16,56 +16,67 @@ export default function AuthPage() {
   
   const [isSplashing, setIsSplashing] = useState(false);
   const [activeAccountName, setActiveAccountName] = useState('');
-  const [isAdminMode, setIsAdminMode] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSplashing(true);
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPass = password.trim();
 
-    const isAdminAuth = (email.trim().toLowerCase() === 'admin' || email.trim().toLowerCase() === 'admin@eduquiz.lk') && password.trim() === 'admin@123';
+    const isAdminAuth = (trimmedEmail === 'admin' || trimmedEmail === 'admin@eduquiz.lk') && (trimmedPass === 'admin@123' || trimmedPass === 'admin');
+
+    setIsSplashing(true);
 
     setTimeout(() => {
       if (isAdminAuth) {
         setActiveAccountName('System Administrator');
         loginUser({
+          name: 'System Administrator',
           email: 'admin@eduquiz.lk',
-          password: 'admin@123'
+          phone: '+94 11 200 0000',
+          role: 'admin',
+          examLevel: 'Administrator'
         });
-        window.open('/admin', '_blank');
-        navigate('/dashboard');
+        navigate('/admin');
       } else if (isSignUp) {
-        // Register brand new user account
         const registered = registerAccount({
           name: name.trim() || 'New Student',
-          email: email.trim(),
-          password: password.trim(),
+          email: trimmedEmail,
+          password: trimmedPass,
           examLevel,
           school: school.trim() || 'Sri Lankan School'
         });
         setActiveAccountName(registered.name);
         navigate('/dashboard');
       } else {
-        // Sign in existing registered account
         const loggedIn = loginUser({
-          email: email.trim(),
-          password: password.trim()
+          email: trimmedEmail,
+          password: trimmedPass
         });
         setActiveAccountName(loggedIn.name);
         navigate('/dashboard');
       }
-    }, 950);
+    }, 800);
   };
 
-  const fillAdminCredentials = () => {
-    setEmail('admin');
-    setPassword('admin@123');
-    setIsAdminMode(true);
+  // One-click direct Admin login handler (avoids browser popup blockers)
+  const handleDirectAdminLogin = () => {
+    setIsSplashing(true);
+    setActiveAccountName('System Administrator');
+    setTimeout(() => {
+      loginUser({
+        name: 'System Administrator',
+        email: 'admin@eduquiz.lk',
+        phone: '+94 11 200 0000',
+        role: 'admin',
+        examLevel: 'Administrator'
+      });
+      navigate('/admin');
+    }, 600);
   };
 
   const fillDemoStudent = () => {
     setEmail('kasun.perera@student.lk');
     setPassword('password123');
-    setIsAdminMode(false);
   };
 
   return (
@@ -87,7 +98,7 @@ export default function AuthPage() {
             height: '100px',
             borderRadius: '50%',
             background: 'radial-gradient(circle, #7C3AED 0%, #2563EB 40%, #10B981 70%, #EC4899 100%)',
-            animation: 'circleSplashExpand 0.95s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+            animation: 'circleSplashExpand 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
             boxShadow: '0 0 120px rgba(124, 58, 237, 0.9)'
           }} />
 
@@ -100,7 +111,7 @@ export default function AuthPage() {
             borderRadius: '24px',
             boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.25)',
             textAlign: 'center',
-            animation: 'splashPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+            animation: 'splashPopIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
             border: '2px solid rgba(255, 255, 255, 0.8)'
           }}>
             <div style={{
@@ -117,10 +128,10 @@ export default function AuthPage() {
               <CheckCircle2 size={38} />
             </div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {isSignUp ? 'Registration Successful!' : 'Welcome Back!'} <Sparkles size={24} color="#F59E0B" />
+              {activeAccountName === 'System Administrator' ? 'Admin Portal Access!' : (isSignUp ? 'Registration Successful!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              Logging in as <strong>{activeAccountName || name || 'Registered Account'}</strong>...
+              Logging in as <strong>{activeAccountName || 'Registered Account'}</strong>...
             </p>
           </div>
         </div>
@@ -153,7 +164,7 @@ export default function AuthPage() {
             <div className="form-group">
               <label className="form-label">Email Address / Username</label>
               <input
-                type="email"
+                type="text"
                 className="form-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -194,11 +205,9 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>
-                {isAdminMode ? 'Admin Console Login' : 'Sign In'}
-              </h2>
+              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Sign In</h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                {isAdminMode ? 'Opens Admin Panel in a separate standalone window' : 'Sign in with your registered account'}
+                Sign in with student or administrator account
               </p>
             </div>
 
@@ -209,7 +218,7 @@ export default function AuthPage() {
                 className="form-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. kasun.perera@student.lk or admin"
+                placeholder="admin or student@lk"
                 required
               />
             </div>
@@ -226,24 +235,27 @@ export default function AuthPage() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '16px' }}>
-              {isAdminMode ? 'Launch Standalone Admin Window' : 'Sign In to My Account'}
+            <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '12px' }}>
+              Sign In to Account
             </button>
 
-            <div style={{ display: 'flex', justifyContent: 'space-around', gap: '8px', marginTop: '16px' }}>
+            {/* DIRECT 1-CLICK ADMIN LOGIN BUTTON */}
+            <button
+              type="button"
+              className="btn btn-secondary btn-block"
+              style={{ marginTop: '10px' }}
+              onClick={handleDirectAdminLogin}
+            >
+              <ShieldCheck size={16} /> ⚡ Direct Admin Portal Access (admin)
+            </button>
+
+            <div style={{ textAlign: 'center', marginTop: '14px' }}>
               <button
                 type="button"
                 onClick={fillDemoStudent}
                 style={{ border: 'none', background: 'transparent', color: 'var(--color-primary)', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}
               >
-                Kasun Account
-              </button>
-              <button
-                type="button"
-                onClick={fillAdminCredentials}
-                style={{ border: 'none', background: 'transparent', color: 'var(--color-secondary)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-              >
-                <ShieldCheck size={14} /> Admin Account (admin)
+                Auto-fill Student (Kasun)
               </button>
             </div>
           </form>
@@ -257,7 +269,7 @@ export default function AuthPage() {
               <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
               <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Welcome Back!</h2>
               <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
-                Sign in with your registered student account to access your model papers
+                Sign in with your registered student or administrator credentials
               </p>
               <button className="ghost-btn" onClick={() => setIsSignUp(false)}>
                 Sign In
