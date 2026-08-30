@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, Menu, X, Home, BookOpen, Award, User, LogOut, LogIn } from 'lucide-react';
+import { Search, Bell, Menu, X, Home, BookOpen, Award, User, LogOut, LogIn, ShieldCheck } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -96,6 +96,12 @@ export default function TopHeader() {
                       style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--color-text-main)', borderRadius: '8px', cursor: 'pointer' }}
                     >
                       <User size={16} /> Student Profile
+                    </button>
+                    <button
+                      onClick={() => { setUserDropdownOpen(false); navigate('/admin'); }}
+                      style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--color-text-main)', borderRadius: '8px', cursor: 'pointer' }}
+                    >
+                      <ShieldCheck size={16} /> Admin Portal
                     </button>
                     <button
                       onClick={handleSignOut}

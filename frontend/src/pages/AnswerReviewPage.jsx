@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 export default function AnswerReviewPage() {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const [quiz, setQuiz] = useState(null);
+  const [questions, setQuestions] = useState([]);
 
-  const questions = [
+  useEffect(() => {
+    async function load() {
+      const res = await api.getQuizById(quizId);
+      if (res.quiz) {
+        setQuiz(res.quiz);
+        if (res.quiz.questions && res.quiz.questions.length > 0) {
+          setQuestions(res.quiz.questions);
+        }
+      }
+    }
+    load();
+  }, [quizId]);
+
+  const defaultQuestions = [
     {
       id: 1,
       text: "Solve for x in the equation: 2x² - 8x + 6 = 0",
@@ -24,17 +40,21 @@ export default function AnswerReviewPage() {
     }
   ];
 
+  const displayQuestions = questions.length > 0 ? questions : defaultQuestions;
+
   return (
     <div style={{ maxWidth: '840px', margin: '0 auto' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '26px', fontWeight: 800 }}>Solutions & Explanations</h1>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Itemized Answer Breakdown for Algebra & Quadratic Equations Paper 01</p>
+        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
+          Itemized Answer Breakdown for {quiz ? quiz.title : 'Examination Model Paper'}
+        </p>
       </div>
 
-      {questions.map((q, idx) => {
-        const isCorrect = q.studentChoice === q.correctIndex;
+      {displayQuestions.map((q, idx) => {
+        const isCorrect = (q.studentChoice !== undefined ? q.studentChoice : q.correctIndex) === q.correctIndex;
         return (
-          <div key={q.id} className="card" style={{ marginBottom: '20px', borderLeft: `6px solid ${isCorrect ? 'var(--color-success)' : 'var(--color-error)'}` }}>
+          <div key={q.id || idx} className="card" style={{ marginBottom: '20px', borderLeft: `6px solid ${isCorrect ? 'var(--color-success)' : 'var(--color-error)'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Question {idx + 1}</span>
               <span className={`badge ${isCorrect ? 'badge-success' : 'badge-error'}`}>{isCorrect ? 'Correct ✓' : 'Incorrect ✕'}</span>
@@ -52,7 +72,7 @@ export default function AnswerReviewPage() {
 
             <div style={{ backgroundColor: 'var(--color-primary-light)', padding: '16px', borderRadius: '14px', fontSize: '14px', color: '#1E3A8A', border: '1px solid var(--color-primary-border)' }}>
               <strong>Solution Explanation:</strong><br />
-              {q.explanation}
+              {q.explanation || 'No detailed step-by-step solution provided for this question.'}
             </div>
           </div>
         );

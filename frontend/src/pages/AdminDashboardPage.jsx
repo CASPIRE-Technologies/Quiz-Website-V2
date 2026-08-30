@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const { user, loginUser, logoutUser } = useAuth();
+  const { user, usersDb, loginUser, logoutUser } = useAuth();
 
   const [adminUser, setAdminUser] = useState('admin');
   const [adminPass, setAdminPass] = useState('admin@123');
@@ -18,12 +18,30 @@ export default function AdminDashboardPage() {
   const [quizSearch, setQuizSearch] = useState('');
   const [quizFilterStatus, setQuizFilterStatus] = useState('all');
 
-  const [studentsList] = useState([
+  const [dbUsers, setDbUsers] = useState([]);
+
+  const mockStudentsList = [
     { id: 'usr-01', name: 'Kasun Perera', email: 'kasun.perera@student.lk', phone: '+94 77 123 4567', examLevel: 'G.C.E. O/L', purchased: 3, completed: 2, joined: '2026-08-10', status: 'Active' },
     { id: 'usr-02', name: 'Dilani Fernando', email: 'dilani.f@gmail.com', phone: '+94 71 888 2211', examLevel: 'G.C.E. A/L (Physical)', purchased: 5, completed: 4, joined: '2026-08-12', status: 'Active' },
     { id: 'usr-03', name: 'Nisal Jayasinghe', email: 'nisal.j@yahoo.com', phone: '+94 75 444 3399', examLevel: 'Grade 5 Scholarship', purchased: 2, completed: 2, joined: '2026-08-15', status: 'Active' },
     { id: 'usr-04', name: 'Amaya Senanayake', email: 'amaya.s@outlook.com', phone: '+94 72 333 1100', examLevel: 'G.C.E. A/L (Bio)', purchased: 4, completed: 1, joined: '2026-08-18', status: 'Active' }
-  ]);
+  ];
+
+  // Derive real registered student accounts dynamically from dbUsers / usersDb
+  const combinedUsers = (dbUsers || []).length > 0 ? dbUsers : (usersDb || []).filter(u => u?.role !== 'admin');
+  const displayStudentsList = combinedUsers.length > 0
+    ? combinedUsers.map((st, idx) => ({
+        id: st.id || `usr-reg-${idx}`,
+        name: st.name || st.email?.split('@')[0] || 'Student',
+        email: st.email,
+        phone: st.phone || '+94 77 123 4567',
+        examLevel: st.examLevel || st.exam_level || 'Not Selected',
+        purchased: st.purchased || st.purchasesCount || 0,
+        completed: st.completed || st.attemptsCount || 0,
+        joined: st.createdAt ? new Date(st.createdAt).toISOString().split('T')[0] : (st.joinedDate || new Date().toISOString().split('T')[0]),
+        status: st.status || 'Active'
+      }))
+    : mockStudentsList;
 
   const [paymentsList] = useState([
     { id: 'TXN-90214', student: 'Kasun Perera', quizTitle: 'Algebra & Quadratic Equations Paper 01', amount: 300, gateway: 'Card Payment', date: '2026-08-28', status: 'Successful' },
@@ -39,6 +57,9 @@ export default function AdminDashboardPage() {
 
       const quizRes = await api.getQuizzes();
       if (quizRes.quizzes) setQuizzesList(quizRes.quizzes);
+
+      const usersRes = await api.getAdminUsers();
+      if (usersRes.users) setDbUsers(usersRes.users);
     }
     loadData();
   }, []);
@@ -124,7 +145,9 @@ export default function AdminDashboardPage() {
   }
 
   const filteredQuizzes = quizzesList.filter(q => {
-    const matchesSearch = q.title.toLowerCase().includes(quizSearch.toLowerCase()) || q.subjectName.toLowerCase().includes(quizSearch.toLowerCase());
+    const titleMatch = (q.title || '').toLowerCase().includes(quizSearch.toLowerCase());
+    const subjectMatch = (q.subjectName || '').toLowerCase().includes(quizSearch.toLowerCase());
+    const matchesSearch = titleMatch || subjectMatch;
     if (quizFilterStatus === 'published') return matchesSearch && (q.is_published !== false);
     if (quizFilterStatus === 'draft') return matchesSearch && (q.is_published === false);
     return matchesSearch;
@@ -171,7 +194,7 @@ export default function AdminDashboardPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text-main)' }}>Admin Management Portal</h1>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Connected to Express REST Backend & MySQL Database (Port 5001)</p>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Connected to Express REST Backend & MongoDB Atlas Database (edu_pulse_lk_db)</p>
           </div>
           <button className="btn btn-primary btn-lg" onClick={() => navigate('/admin/create-quiz')}>
             <Plus size={18} /> Create New Quiz Paper
@@ -185,7 +208,7 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Total Students</div>
-              <div style={{ fontSize: '22px', fontWeight: 800 }}>{stats.totalStudents}</div>
+              <div style={{ fontSize: '22px', fontWeight: 800 }}>{displayStudentsList?.length || 0}</div>
             </div>
           </div>
 
@@ -195,7 +218,7 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Active Quizzes</div>
-              <div style={{ fontSize: '22px', fontWeight: 800 }}>{quizzesList.length}</div>
+              <div style={{ fontSize: '22px', fontWeight: 800 }}>{quizzesList?.length || 0}</div>
             </div>
           </div>
 
@@ -205,7 +228,7 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Total Revenue</div>
-              <div style={{ fontSize: '22px', fontWeight: 800 }}>LKR {(stats.revenueLKR / 1000).toFixed(0)}k</div>
+              <div style={{ fontSize: '22px', fontWeight: 800 }}>LKR {(Number(stats?.revenueLKR || 0) / 1000).toFixed(0)}k</div>
             </div>
           </div>
 
@@ -215,20 +238,20 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Completed Attempts</div>
-              <div style={{ fontSize: '22px', fontWeight: 800 }}>{stats.completedAttempts}</div>
+              <div style={{ fontSize: '22px', fontWeight: 800 }}>{stats?.completedAttempts || 0}</div>
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
           <button className={`chip ${activeTab === 'quizzes' ? 'active' : ''}`} onClick={() => setActiveTab('quizzes')}>
-            Quiz Management ({quizzesList.length})
+            Quiz Management ({quizzesList?.length || 0})
           </button>
           <button className={`chip ${activeTab === 'students' ? 'active' : ''}`} onClick={() => setActiveTab('students')}>
-            Student Management ({studentsList.length})
+            Student Management ({displayStudentsList?.length || 0})
           </button>
           <button className={`chip ${activeTab === 'payments' ? 'active' : ''}`} onClick={() => setActiveTab('payments')}>
-            Payment Dashboard ({paymentsList.length})
+            Payment Dashboard ({paymentsList?.length || 0})
           </button>
           <button className={`chip ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
             Overview & Analytics
@@ -270,15 +293,16 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredQuizzes.map(quiz => {
+                  {filteredQuizzes.map((quiz, i) => {
+                    if (!quiz) return null;
                     const isPublished = quiz.is_published !== false;
                     return (
-                      <tr key={quiz.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                        <td style={{ padding: '14px 16px', fontWeight: 700 }}>{quiz.title}</td>
-                        <td style={{ padding: '14px 16px' }}>{quiz.subjectName}</td>
-                        <td style={{ padding: '14px 16px' }}><span className="badge badge-neutral">{quiz.examLevel ? quiz.examLevel.toUpperCase() : 'OL'}</span></td>
-                        <td style={{ padding: '14px 16px' }}>{quiz.questionCount || 30} Qs</td>
-                        <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--color-primary)' }}>LKR {quiz.price}</td>
+                      <tr key={quiz.id || i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        <td style={{ padding: '14px 16px', fontWeight: 700 }}>{quiz.title || 'Untitled Paper'}</td>
+                        <td style={{ padding: '14px 16px' }}>{quiz.subjectName || quiz.subject_name || 'General'}</td>
+                        <td style={{ padding: '14px 16px' }}><span className="badge badge-neutral">{String(quiz.examLevel || quiz.exam_level || 'OL').toUpperCase()}</span></td>
+                        <td style={{ padding: '14px 16px' }}>{quiz.questionCount || quiz.question_count || 0} Qs</td>
+                        <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--color-primary)' }}>LKR {quiz.price || 0}</td>
                         <td style={{ padding: '14px 16px' }}>
                           <span className={`badge ${isPublished ? 'badge-success' : 'badge-warning'}`}>
                             {isPublished ? 'Published' : 'Draft'}
@@ -310,7 +334,7 @@ export default function AdminDashboardPage() {
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Registered Student Roster</h3>
-              <span className="badge badge-primary">{studentsList.length} Active Students</span>
+              <span className="badge badge-primary">{displayStudentsList?.length || 0} Active Students</span>
             </div>
 
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -326,14 +350,14 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {studentsList.map(st => (
-                    <tr key={st.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td style={{ padding: '14px 16px', fontWeight: 700 }}>{st.name}</td>
-                      <td style={{ padding: '14px 16px', color: 'var(--color-text-muted)' }}>{st.email}<br />{st.phone}</td>
-                      <td style={{ padding: '14px 16px' }}><span className="badge badge-neutral">{st.examLevel}</span></td>
-                      <td style={{ padding: '14px 16px' }}>{st.purchased} Quizzes</td>
-                      <td style={{ padding: '14px 16px' }}>{st.joined}</td>
-                      <td style={{ padding: '14px 16px' }}><span className="badge badge-success">{st.status}</span></td>
+                  {displayStudentsList.map((st, i) => (
+                    <tr key={st.id || i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <td style={{ padding: '14px 16px', fontWeight: 700 }}>{st.name || 'Student'}</td>
+                      <td style={{ padding: '14px 16px', color: 'var(--color-text-muted)' }}>{st.email || ''}<br />{st.phone || ''}</td>
+                      <td style={{ padding: '14px 16px' }}><span className="badge badge-neutral">{st.examLevel || 'O/L'}</span></td>
+                      <td style={{ padding: '14px 16px' }}>{st.purchased || 0} Quizzes</td>
+                      <td style={{ padding: '14px 16px' }}>{st.joined || ''}</td>
+                      <td style={{ padding: '14px 16px' }}><span className="badge badge-success">{st.status || 'Active'}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -362,15 +386,15 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paymentsList.map(pay => (
-                    <tr key={pay.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  {paymentsList.map((pay, i) => (
+                    <tr key={pay.id || i} style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <td style={{ padding: '14px 16px', fontWeight: 700 }}>{pay.id}</td>
-                      <td style={{ padding: '14px 16px' }}>{pay.student}</td>
-                      <td style={{ padding: '14px 16px' }}>{pay.quizTitle}</td>
-                      <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--color-primary)' }}>LKR {pay.amount}</td>
-                      <td style={{ padding: '14px 16px' }}>{pay.gateway}</td>
+                      <td style={{ padding: '14px 16px' }}>{pay.student || 'Student'}</td>
+                      <td style={{ padding: '14px 16px' }}>{pay.quizTitle || 'Quiz Paper'}</td>
+                      <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--color-primary)' }}>LKR {pay.amount || 0}</td>
+                      <td style={{ padding: '14px 16px' }}>{pay.gateway || 'Card Payment'}</td>
                       <td style={{ padding: '14px 16px' }}>
-                        <span className={`badge ${pay.status === 'Successful' ? 'badge-success' : 'badge-warning'}`}>{pay.status}</span>
+                        <span className={`badge ${pay.status === 'Successful' ? 'badge-success' : 'badge-warning'}`}>{pay.status || 'Successful'}</span>
                       </td>
                     </tr>
                   ))}

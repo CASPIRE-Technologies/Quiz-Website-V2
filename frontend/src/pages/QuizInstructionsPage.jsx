@@ -1,17 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
+import { api } from '../services/api';
 
 export default function QuizInstructionsPage() {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const [agreed, setAgreed] = useState(false);
+  const [quiz, setQuiz] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const res = await api.getQuizById(quizId);
+      if (res.quiz) setQuiz(res.quiz);
+    }
+    load();
+  }, [quizId]);
 
   return (
     <div style={{ maxWidth: '680px', margin: '0 auto' }}>
       <div className="card" style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>Algebra & Quadratic Equations Paper 01</h1>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Mathematics • 30 Questions • 45 Minutes</p>
+        <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>
+          {quiz ? quiz.title : 'Loading Examination Paper...'}
+        </h1>
+        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
+          {quiz ? `${quiz.subjectName || 'General'} • ${quiz.questions?.length || quiz.questionCount || 30} Questions • ${quiz.durationMinutes || 45} Minutes` : 'Loading...'}
+        </p>
       </div>
 
       <div className="card" style={{ backgroundColor: 'var(--color-warning-light)', borderColor: '#FCD34D', marginBottom: '24px' }}>

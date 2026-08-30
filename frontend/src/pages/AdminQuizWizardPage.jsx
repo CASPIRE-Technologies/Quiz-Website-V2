@@ -114,18 +114,60 @@ export default function AdminQuizWizardPage() {
       return;
     }
 
+    if (!duration || duration <= 0) {
+      alert("Please enter a valid exam duration in minutes!");
+      setStep(2);
+      return;
+    }
+
+    if (price === undefined || price < 0) {
+      alert("Please enter a valid quiz price (0 or greater)!");
+      setStep(2);
+      return;
+    }
+
+    if (questions.length === 0) {
+      alert("At least one question is required before publishing a quiz!");
+      setStep(3);
+      return;
+    }
+
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (!q.text || !q.text.trim()) {
+        alert(`Question #${i + 1} has an empty question text. Please enter a valid question.`);
+        setStep(3);
+        return;
+      }
+
+      const validOpts = (q.options || []).filter(o => o && o.trim());
+      if (validOpts.length < 2) {
+        alert(`Question #${i + 1} must have at least 2 answer options!`);
+        setStep(3);
+        return;
+      }
+
+      if (q.correctIndex === undefined || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+        alert(`Please select a correct answer key for Question #${i + 1}!`);
+        setStep(3);
+        return;
+      }
+    }
+
+    const targetId = isEditMode ? quizId : `quiz-custom-${Date.now()}`;
     const quizPayload = {
-      id: `quiz-custom-${Date.now()}`,
+      id: targetId,
       title: title.trim(),
       examLevel,
       streamId: examLevel === 'al' ? streamId : null,
       subjectId: subjectName.toLowerCase().replace(/\s+/g, '_'),
       subjectName,
       questionCount: questions.length,
-      duration,
+      durationMinutes: Number(duration),
+      duration: Number(duration),
       difficulty,
-      price,
-      attemptsAllowed: attempts,
+      price: Number(price),
+      attemptsAllowed: Number(attempts),
       description: description.trim() || 'Custom examination paper created by Administrator.',
       questions,
       is_published: true
@@ -437,7 +479,7 @@ export default function AdminQuizWizardPage() {
 
             <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>Ready to Publish Live!</h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', maxWidth: '480px', margin: '0 auto 24px auto' }}>
-              Paper <strong>"{title}"</strong> with {questions.length} question(s) will be {isEditMode ? 'updated' : 'published'} live to the Express REST backend and Supabase database for students to enroll and attempt.
+              Paper <strong>"{title}"</strong> with {questions.length} question(s) will be {isEditMode ? 'updated' : 'published'} live to the Express REST backend and MongoDB Atlas database for students to enroll and attempt.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>

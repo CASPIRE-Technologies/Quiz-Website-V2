@@ -1,116 +1,65 @@
-const { pool } = require('../config/db');
+const Quiz = require('../models/Quiz');
 
-function formatQuiz(quiz) {
+function formatQuiz(quizDoc) {
+  const quiz = quizDoc.toObject ? quizDoc.toObject() : quizDoc;
   return {
-    ...quiz,
-    examLevel: quiz.exam_level || quiz.examLevel,
-    subjectId: quiz.subject_id || quiz.subjectId,
-    subjectName: quiz.subject_name || quiz.subjectName,
-    questionCount: quiz.question_count || quiz.questionCount,
-    durationMinutes: quiz.duration_minutes || quiz.durationMinutes,
-    attemptsAllowed: quiz.attempts_allowed || quiz.attemptsAllowed,
-    reviewsCount: quiz.reviews_count || quiz.reviewsCount
+    id: quiz.id || quiz._id,
+    title: quiz.title,
+    examLevel: quiz.exam_level || quiz.examLevel || 'ol',
+    streamId: quiz.stream_id || quiz.streamId || 'physical',
+    subjectId: quiz.subject_id || quiz.subjectId || 'math',
+    subjectName: quiz.subject_name || quiz.subjectName || 'Mathematics',
+    questionCount: quiz.question_count || (quiz.questions ? quiz.questions.length : 30),
+    durationMinutes: quiz.duration_minutes || quiz.durationMinutes || 45,
+    difficulty: quiz.difficulty || 'Medium',
+    price: quiz.price || 300,
+    about: quiz.about || 'Model Paper',
+    is_published: quiz.is_published !== false,
+    questions: (quiz.questions || []).map((q, idx) => ({
+      id: q.id || idx + 1,
+      text: q.question_text || q.text || '',
+      questionText: q.question_text || q.text || '',
+      explanation: q.explanation || '',
+      correctIndex: q.correct_index !== undefined ? q.correct_index : 0,
+      marks: q.marks || 1,
+      options: (q.options || []).map((o, oIdx) => o.option_text || o.text || String(o))
+    }))
   };
 }
 
-// Seed mock data fallback for quizzes
-const mockQuizzes = [
-  {
-    id: "quiz-math-01",
-    title: "Algebra & Quadratic Equations Paper 01",
-    examLevel: "ol",
-    subjectId: "math",
-    subjectName: "Mathematics",
-    questionCount: 30,
-    durationMinutes: 45,
-    difficulty: "Medium",
-    price: 300,
-    currency: "LKR",
-    attemptsAllowed: 1,
-    rating: 4.8,
-    reviewsCount: 142,
-    about: "This quiz covers essential algebraic manipulations, factorization, solving quadratic equations using completing the square method, and real-world word problems.",
-    topics: ["Algebraic Expressions", "Factorization", "Quadratic Equations", "Indices & Logarithms"],
-    questions: [
-      {
-        id: 1,
-        text: "Solve for x in the equation: 2x² - 8x + 6 = 0",
-        options: ["x = 1 or x = 3", "x = -1 or x = -3", "x = 2 or x = 4", "x = 0 or x = 3"],
-        correctIndex: 0,
-        explanation: "Divide the equation by 2: x² - 4x + 3 = 0. Factorize: (x - 1)(x - 3) = 0. Therefore, x = 1 or x = 3."
-      },
-      {
-        id: 2,
-        text: "What is the value of x if log₂(x) = 5?",
-        options: ["10", "25", "32", "64"],
-        correctIndex: 2,
-        explanation: "By logarithmic identity log_b(a) = c implies b^c = a. Therefore, 2⁵ = 32."
-      }
-    ]
-  },
-  {
-    id: "quiz-physics-01",
-    title: "Mechanics & Gravitational Fields Test",
-    examLevel: "al",
-    streamId: "physical",
-    subjectId: "physics",
-    subjectName: "Physics",
-    questionCount: 30,
-    durationMinutes: 60,
-    difficulty: "Hard",
-    price: 450,
-    currency: "LKR",
-    attemptsAllowed: 1,
-    rating: 4.9,
-    reviewsCount: 98,
-    about: "Advanced Level physics mock paper focusing on Newton's Laws, Momentum Conservation, Kinematics, and Circular Motion.",
-    topics: ["Kinematics", "Newton's Laws", "Work, Energy & Power", "Circular Motion", "Gravitational Fields"],
-    questions: []
-  },
-  {
-    id: "quiz-g5-01",
-    title: "Scholarship Intelligence & Logic Model Paper 01",
-    examLevel: "g5",
-    subjectId: "g5_iq",
-    subjectName: "General Knowledge & IQ",
-    questionCount: 25,
-    durationMinutes: 30,
-    difficulty: "Easy",
-    price: 250,
-    currency: "LKR",
-    attemptsAllowed: 2,
-    rating: 4.7,
-    reviewsCount: 210,
-    about: "Specially formulated picture logic, pattern completion, and vocabulary questions for Grade 5 scholarship students.",
-    topics: ["Pattern Recognition", "Numerical Sequences", "Vocabulary", "Spatial Reasoning"],
-    questions: []
-  }
-];
-
 exports.getAllQuizzes = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM quizzes WHERE is_published = TRUE');
-    if (rows.length > 0) {
-      return res.json({ success: true, quizzes: rows.map(formatQuiz) });
-    }
+    const quizzes = await Quiz.find({ is_published: { $ne: false } }).sort({ created_at: -1 });
+    return res.json({ success: true, quizzes: quizzes.map(formatQuiz) });
   } catch (err) {
-    // fallback
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch quizzes from MongoDB.',
+      error: err.message
+    });
   }
-  return res.json({ success: true, quizzes: mockQuizzes });
 };
 
 exports.getQuizById = async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM quizzes WHERE id = ?', [id]);
-    if (rows.length > 0) {
-      const quiz = rows[0];
-      return res.json({ success: true, quiz: formatQuiz(quiz) });
+    const quiz = await Quiz.findOne({ $or: [{ id }, { _id: id }] });
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quiz paper not found.'
+      });
     }
-  } catch (err) {
-    // fallback
-  }
 
-  const found = mockQuizzes.find(q => q.id === id) || mockQuizzes[0];
-  return res.json({ success: true, quiz: found });
+    return res.json({
+      success: true,
+      quiz: formatQuiz(quiz)
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch quiz details.',
+      error: err.message
+    });
+  }
 };

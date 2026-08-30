@@ -25,11 +25,9 @@ export default function QuizTakingPage() {
         if (res.quiz.questions && res.quiz.questions.length > 0) {
           setQuestions(res.quiz.questions);
         } else {
-          // Fallback questions if paper has no custom questions
           setQuestions([
-            { id: 1, text: `Question 1 for ${res.quiz.title}: Solve for x in 2x² - 8x + 6 = 0`, options: ["x = 1 or x = 3", "x = -1 or x = -3", "x = 2 or x = 4", "x = 0 or x = 3"], correctIndex: 0 },
-            { id: 2, text: "What is the value of x if log₂(x) = 5?", options: ["10", "25", "32", "64"], correctIndex: 2 },
-            { id: 3, text: "Factorize the quadratic expression: x² - 9x + 20", options: ["(x - 4)(x - 5)", "(x + 4)(x + 5)", "(x - 2)(x - 10)", "(x + 2)(x - 10)"], correctIndex: 0 }
+            { id: 1, text: `Question 1 for ${res.quiz.title}: Select the primary concept associated with ${res.quiz.subjectName || 'this subject'}.`, options: ["Option A", "Option B", "Option C", "Option D"], correctIndex: 0, explanation: "Option A is correct." },
+            { id: 2, text: `Question 2 for ${res.quiz.title}: Choose the correct equation solution.`, options: ["Value 1", "Value 2", "Value 3", "Value 4"], correctIndex: 1, explanation: "Value 2 is the correct answer." }
           ]);
         }
         setTimeLeft((res.quiz.durationMinutes || 45) * 60);

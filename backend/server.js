@@ -1,13 +1,9 @@
-/* ==========================================================================
-   EXPRESS REST API SERVER ENTRYPOINT
-   Paid Quiz & Examination Platform
-   ========================================================================== */
-
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-const { testConnection } = require('./config/db');
+const { connectDB } = require('./config/db');
 
 const authRoutes = require('./routes/authRoutes');
 const quizRoutes = require('./routes/quizRoutes');
@@ -27,7 +23,7 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
-    platform: 'EduQuiz Pro REST API Engine',
+    platform: 'EduQuiz Pro REST API Engine (MongoDB Cluster: edu_pulse_lk_db)',
     timestamp: new Date().toISOString()
   });
 });
@@ -39,11 +35,15 @@ app.use('/api/attempts', attemptRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Start Server
+// Connect to MongoDB and Start Server
 app.listen(PORT, async () => {
   console.log(`=============================================================`);
   console.log(`🚀 EduQuiz Pro API Server running on port ${PORT}`);
   console.log(`🔗 API Base Endpoint: http://localhost:${PORT}/api`);
   console.log(`=============================================================`);
-  await testConnection();
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('Failed to initialize MongoDB connection on startup:', err.message);
+  }
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Play, FileText, Clock } from 'lucide-react';
+import { ChevronRight, Play, CheckCircle2, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function DashboardPage() {
@@ -13,6 +13,15 @@ export default function DashboardPage() {
     { id: "al", title: "G.C.E. Advanced Level", badge: "Senior Level", icon: "🎓", desc: "Stream-specific past papers" }
   ];
 
+  const isMatchingLevel = (examId, userExamLevel) => {
+    if (!userExamLevel) return false;
+    const lower = userExamLevel.toLowerCase();
+    if (examId === 'g5' && (lower.includes('grade 5') || lower.includes('g5') || lower.includes('scholarship'))) return true;
+    if (examId === 'ol' && (lower.includes('ordinary') || lower.includes('o/l') || lower.includes('o-level'))) return true;
+    if (examId === 'al' && (lower.includes('advanced') || lower.includes('a/l') || lower.includes('a-level'))) return true;
+    return false;
+  };
+
   return (
     <div>
       <div style={{ marginBottom: '28px' }}>
@@ -21,17 +30,51 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '36px' }}>
-        {examLevels.map(exam => (
-          <div key={exam.id} className="card card-hover" style={{ cursor: 'pointer' }} onClick={() => navigate(`/exams/${exam.id}`)}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>{exam.icon}</div>
-            <span className="badge badge-primary" style={{ marginBottom: '10px' }}>{exam.badge}</span>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>{exam.title}</h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>{exam.desc}</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)' }}>
-              <span>Choose Subject</span> <ChevronRight size={16} />
+        {examLevels.map(exam => {
+          const isSelected = isMatchingLevel(exam.id, user?.examLevel);
+
+          return (
+            <div
+              key={exam.id}
+              className="card card-hover"
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                border: isSelected ? '2.5px solid var(--color-primary)' : '1px solid var(--color-border)',
+                backgroundColor: isSelected ? '#EFF6FF' : 'white',
+                boxShadow: isSelected ? '0 12px 28px -6px rgba(37, 99, 235, 0.25)' : 'none',
+                transform: isSelected ? 'translateY(-2px)' : 'none'
+              }}
+              onClick={() => navigate(`/exams/${exam.id}`)}
+            >
+              {isSelected && (
+                <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'var(--color-primary)', color: 'white', padding: '4px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800 }}>
+                  <CheckCircle2 size={13} /> Your Stream
+                </div>
+              )}
+
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>{exam.icon}</div>
+              
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
+                <span className={`badge ${isSelected ? 'badge-primary' : 'badge-neutral'}`}>
+                  {exam.badge}
+                </span>
+                {isSelected && (
+                  <span className="badge" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', fontWeight: 700 }}>
+                    ★ Selected
+                  </span>
+                )}
+              </div>
+
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '6px', color: 'var(--color-text-main)' }}>{exam.title}</h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>{exam.desc}</p>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: isSelected ? 'var(--color-primary)' : 'var(--color-text-main)' }}>
+                <span>Choose Subject</span> <ChevronRight size={16} />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>

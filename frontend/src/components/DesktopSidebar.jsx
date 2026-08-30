@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, BookOpen, Award, User, LogOut, LogIn } from 'lucide-react';
+import { Home, Search, BookOpen, Award, User, LogOut, LogIn, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function DesktopSidebar() {
@@ -8,7 +8,7 @@ export default function DesktopSidebar() {
   const navigate = useNavigate();
   const { user, logoutUser } = useAuth();
 
-  const isCurrent = (path) => location.pathname === path;
+  const isCurrent = (path) => location.pathname.startsWith(path);
 
   return (
     <aside className="desktop-sidebar">
@@ -37,6 +37,9 @@ export default function DesktopSidebar() {
         </Link>
         <Link to="/profile" className={`nav-item ${isCurrent('/profile') ? 'active' : ''}`}>
           <User size={18} /> <span>Student Profile</span>
+        </Link>
+        <Link to="/admin" className={`nav-item ${isCurrent('/admin') ? 'active' : ''}`} style={{ marginTop: '8px', color: user?.role === 'admin' ? 'var(--color-primary)' : undefined }}>
+          <ShieldCheck size={18} /> <span>Admin Portal</span>
         </Link>
       </div>
 

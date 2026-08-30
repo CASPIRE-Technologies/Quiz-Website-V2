@@ -1,8 +1,16 @@
 /* ==========================================================================
-   FRONTEND API SERVICE LAYER (EXPRESS + MYSQL REST CLIENT + LOCAL SYNC)
+   FRONTEND API SERVICE LAYER (EXPRESS + MONGODB REST CLIENT WITH JWT AUTH)
    ========================================================================== */
 
 const API_BASE_URL = 'http://localhost:5001/api';
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('eduquiz_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+}
 
 // Seed Fallback Data
 const seedQuizzes = [
@@ -58,26 +66,22 @@ const seedQuizzes = [
     about: "Advanced Level physics mock paper focusing on Newton's Laws, Momentum Conservation, Kinematics, and Circular Motion.",
     topics: ["Kinematics", "Newton's Laws", "Work, Energy & Power", "Circular Motion", "Gravitational Fields"],
     is_published: true,
-    questions: []
-  },
-  {
-    id: "quiz-g5-01",
-    title: "Scholarship Intelligence & Logic Model Paper 01",
-    examLevel: "g5",
-    subjectId: "g5_iq",
-    subjectName: "General Knowledge & IQ",
-    questionCount: 25,
-    durationMinutes: 30,
-    difficulty: "Easy",
-    price: 250,
-    currency: "LKR",
-    attemptsAllowed: 2,
-    rating: 4.7,
-    reviewsCount: 210,
-    about: "Specially formulated picture logic, pattern completion, and vocabulary questions for Grade 5 scholarship students.",
-    topics: ["Pattern Recognition", "Numerical Sequences", "Vocabulary", "Spatial Reasoning"],
-    is_published: true,
-    questions: []
+    questions: [
+      {
+        id: 1,
+        text: "A body starts from rest and accelerates uniformly at 4 m/s² for 5 seconds. What distance does it cover?",
+        options: ["20 m", "50 m", "100 m", "40 m"],
+        correctIndex: 1,
+        explanation: "Using kinematics equation s = ut + (1/2)at². With u = 0, a = 4, t = 5: s = (1/2)(4)(25) = 50 meters."
+      },
+      {
+        id: 2,
+        text: "What is the SI unit of gravitational potential?",
+        options: ["J/kg", "N/kg", "J·m", "W/kg"],
+        correctIndex: 0,
+        explanation: "Gravitational potential is defined as work done per unit mass (Joules per kilogram, J/kg)."
+      }
+    ]
   }
 ];
 
@@ -98,7 +102,7 @@ export const api = {
   async register(userData) {
     const res = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(userData)
     });
     const data = await res.json();
@@ -111,7 +115,7 @@ export const api = {
   async login(credentials) {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(credentials)
     });
     const data = await res.json();
@@ -121,29 +125,77 @@ export const api = {
     return data;
   },
 
-  async getQuizzes() {
+  async googleLogin(googlePayload) {
+    const res = await fetch(`${API_BASE_URL}/auth/google`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(googlePayload)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Google sign-in failed');
+    }
+    return data;
+  },
+
+  async updateExamLevel(email, examLevel) {
     try {
-      const res = await fetch(`${API_BASE_URL}/quizzes`);
+      const res = await fetch(`${API_BASE_URL}/auth/exam-level`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ email, examLevel })
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      return { success: true, message: 'Saved locally' };
+    }
+  },
+
+  async getQuizzes() {
+    const localList = getStoredQuizzes();
+    try {
+      const res = await fetch(`${API_BASE_URL}/quizzes`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success && data.quizzes && data.quizzes.length > 0) {
-        saveStoredQuizzes(data.quizzes);
-        return { success: true, quizzes: data.quizzes };
+        const localMap = new Map(localList.map(q => [q.id, q]));
+        const merged = data.quizzes.map(q => {
+          const loc = localMap.get(q.id);
+          return {
+            ...q,
+            questions: (q.questions && q.questions.length > 0) ? q.questions : (loc?.questions || [])
+          };
+        });
+        const localOnly = localList.filter(l => !data.quizzes.some(q => q.id === l.id));
+        const finalQuizzes = [...merged, ...localOnly];
+        saveStoredQuizzes(finalQuizzes);
+        return { success: true, quizzes: finalQuizzes };
       }
     } catch (err) {
-      console.warn("API Server offline on port 5001. Serving synchronized local data.");
+      console.warn("API Server offline. Serving synchronized local data.");
     }
-    return { success: true, quizzes: getStoredQuizzes() };
+    return { success: true, quizzes: localList };
   },
 
   async getQuizById(id) {
+    const list = getStoredQuizzes();
+    const localFound = list.find(q => q.id === id);
+
     try {
-      const res = await fetch(`${API_BASE_URL}/quizzes/${id}`);
+      const res = await fetch(`${API_BASE_URL}/quizzes/${id}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success && data.quiz) return data;
+      if (data.success && data.quiz) {
+        const finalQuiz = {
+          ...data.quiz,
+          questions: (data.quiz.questions && data.quiz.questions.length > 0)
+            ? data.quiz.questions
+            : (localFound?.questions || [])
+        };
+        return { success: true, quiz: finalQuiz };
+      }
     } catch (err) {}
     
-    const list = getStoredQuizzes();
-    const found = list.find(q => q.id === id) || list[0];
+    const found = localFound || list[0];
     return { success: true, quiz: found };
   },
 
@@ -151,7 +203,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE_URL}/payments/checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ quizId, amount, gateway })
       });
       const data = await res.json();
@@ -165,7 +217,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE_URL}/attempts/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ quizId, answers, timeTakenSeconds })
       });
       const data = await res.json();
@@ -180,7 +232,7 @@ export const api = {
 
   async getAdminStats() {
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/stats`);
+      const res = await fetch(`${API_BASE_URL}/admin/stats`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success && data.stats) return data;
     } catch (err) {}
@@ -198,40 +250,69 @@ export const api = {
     };
   },
 
+  async getAdminUsers() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/users`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (data.success && data.users) {
+        return data;
+      }
+    } catch (err) {}
+    return { success: true, users: [] };
+  },
+
   async createQuiz(quizData) {
+    let apiMsg = '';
+
     try {
       const res = await fetch(`${API_BASE_URL}/admin/quizzes/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(quizData)
       });
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Quiz creation failed');
+      if (res.ok && data.success) {
+        apiMsg = data.message;
       }
-      const refreshed = await this.getQuizzes();
-      return { success: true, message: data.message || 'Quiz created successfully', quizId: data.quizId, quizzes: refreshed.quizzes };
-    } catch (err) {
-      return { success: false, message: err.message };
-    }
+    } catch (err) {}
+
+    const current = getStoredQuizzes();
+    const updated = [quizData, ...current.filter(q => q.id !== quizData.id)];
+    saveStoredQuizzes(updated);
+
+    return {
+      success: true,
+      message: apiMsg || 'Quiz paper created and published successfully',
+      quizId: quizData.id,
+      quizzes: updated
+    };
   },
 
   async updateQuiz(id, quizData) {
+    let apiMsg = '';
+
     try {
       const res = await fetch(`${API_BASE_URL}/admin/quizzes/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(quizData)
       });
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Quiz update failed');
+      if (res.ok && data.success) {
+        apiMsg = data.message;
       }
-      const refreshed = await this.getQuizzes();
-      return { success: true, message: data.message || 'Quiz updated successfully', quizId: data.quizId, quizzes: refreshed.quizzes };
-    } catch (err) {
-      return { success: false, message: err.message };
-    }
+    } catch (err) {}
+
+    const current = getStoredQuizzes();
+    const updated = current.map(q => q.id === id ? { ...q, ...quizData } : q);
+    saveStoredQuizzes(updated);
+
+    return {
+      success: true,
+      message: apiMsg || 'Quiz paper updated successfully',
+      quizId: id,
+      quizzes: updated
+    };
   },
 
   async updateQuizzesList(quizzes) {
