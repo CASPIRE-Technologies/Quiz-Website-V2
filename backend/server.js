@@ -16,7 +16,8 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// Port 5001 avoids macOS AirPlay Receiver port 5000 conflict
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());

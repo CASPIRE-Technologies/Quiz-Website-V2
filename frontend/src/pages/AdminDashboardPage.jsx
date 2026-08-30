@@ -1,29 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit3, Copy, Eye, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, RefreshCw } from 'lucide-react';
+import { Plus, Search, Copy, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign } from 'lucide-react';
 import { api } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   
-  const [activeTab, setActiveTab] = useState('quizzes'); // 'analytics', 'quizzes', 'students', 'payments'
+  const [activeTab, setActiveTab] = useState('quizzes');
   const [stats, setStats] = useState({ totalStudents: 1420, totalQuizzes: 48, revenueLKR: 1245000, completedAttempts: 3410, averageScore: 76.4 });
   const [quizzesList, setQuizzesList] = useState([]);
   const [quizSearch, setQuizSearch] = useState('');
   const [quizFilterStatus, setQuizFilterStatus] = useState('all');
 
-  // Student mock data for Admin management
-  const [studentsList, setStudentsList] = useState([
+  const [studentsList] = useState([
     { id: 'usr-01', name: 'Kasun Perera', email: 'kasun.perera@student.lk', phone: '+94 77 123 4567', examLevel: 'G.C.E. O/L', purchased: 3, completed: 2, joined: '2026-08-10', status: 'Active' },
     { id: 'usr-02', name: 'Dilani Fernando', email: 'dilani.f@gmail.com', phone: '+94 71 888 2211', examLevel: 'G.C.E. A/L (Physical)', purchased: 5, completed: 4, joined: '2026-08-12', status: 'Active' },
     { id: 'usr-03', name: 'Nisal Jayasinghe', email: 'nisal.j@yahoo.com', phone: '+94 75 444 3399', examLevel: 'Grade 5 Scholarship', purchased: 2, completed: 2, joined: '2026-08-15', status: 'Active' },
     { id: 'usr-04', name: 'Amaya Senanayake', email: 'amaya.s@outlook.com', phone: '+94 72 333 1100', examLevel: 'G.C.E. A/L (Bio)', purchased: 4, completed: 1, joined: '2026-08-18', status: 'Active' }
   ]);
 
-  // Payment mock data
-  const [paymentsList, setPaymentsList] = useState([
+  const [paymentsList] = useState([
     { id: 'TXN-90214', student: 'Kasun Perera', quizTitle: 'Algebra & Quadratic Equations Paper 01', amount: 300, gateway: 'Card Payment', date: '2026-08-28', status: 'Successful' },
     { id: 'TXN-90213', student: 'Dilani Fernando', quizTitle: 'Physics Mechanics & Gravitational Test', amount: 450, gateway: 'PayHere', date: '2026-08-28', status: 'Successful' },
     { id: 'TXN-90212', student: 'Nisal Jayasinghe', quizTitle: 'Scholarship Intelligence Model Paper 01', amount: 250, gateway: 'Card Payment', date: '2026-08-27', status: 'Successful' },
@@ -41,7 +37,6 @@ export default function AdminDashboardPage() {
     loadData();
   }, []);
 
-  // Filter quizzes
   const filteredQuizzes = quizzesList.filter(q => {
     const matchesSearch = q.title.toLowerCase().includes(quizSearch.toLowerCase()) || q.subjectName.toLowerCase().includes(quizSearch.toLowerCase());
     if (quizFilterStatus === 'published') return matchesSearch && (q.is_published !== false);
@@ -49,40 +44,43 @@ export default function AdminDashboardPage() {
     return matchesSearch;
   });
 
-  // Action handlers
-  const handleTogglePublish = (quizId) => {
-    setQuizzesList(prev => prev.map(q => q.id === quizId ? { ...q, is_published: !q.is_published } : q));
+  const handleTogglePublish = async (quizId) => {
+    const updated = quizzesList.map(q => q.id === quizId ? { ...q, is_published: (q.is_published === false) } : q);
+    setQuizzesList(updated);
+    await api.updateQuizzesList(updated);
   };
 
-  const handleDeleteQuiz = (quizId) => {
+  const handleDeleteQuiz = async (quizId) => {
     if (window.confirm("Are you sure you want to delete this quiz paper permanently?")) {
-      setQuizzesList(prev => prev.filter(q => q.id !== quizId));
+      const updated = quizzesList.filter(q => q.id !== quizId);
+      setQuizzesList(updated);
+      await api.updateQuizzesList(updated);
     }
   };
 
-  const handleDuplicateQuiz = (quiz) => {
+  const handleDuplicateQuiz = async (quiz) => {
     const duplicated = {
       ...quiz,
       id: `quiz-dup-${Date.now()}`,
       title: `${quiz.title} (Copy)`
     };
-    setQuizzesList([duplicated, ...quizzesList]);
+    const updated = [duplicated, ...quizzesList];
+    setQuizzesList(updated);
+    await api.updateQuizzesList(updated);
   };
 
   return (
     <div>
-      {/* Header Banner */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)' }}>Admin Management Portal</h1>
-          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Connected to Express REST Backend & MySQL Database</p>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Connected to Express REST Backend & MySQL Database (Port 5001)</p>
         </div>
         <button className="btn btn-primary btn-lg" onClick={() => navigate('/admin/create-quiz')}>
           <Plus size={18} /> Create New Quiz Paper
         </button>
       </div>
 
-      {/* Overview Metric Cards (Responsive Grid) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -100,7 +98,7 @@ export default function AdminDashboardPage() {
           </div>
           <div>
             <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Active Quizzes</div>
-            <div style={{ fontSize: '22px', fontWeight: 800 }}>{quizzesList.length || stats.totalQuizzes}</div>
+            <div style={{ fontSize: '22px', fontWeight: 800 }}>{quizzesList.length}</div>
           </div>
         </div>
 
@@ -125,7 +123,6 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Admin Navigation Tabs */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
         <button className={`chip ${activeTab === 'quizzes' ? 'active' : ''}`} onClick={() => setActiveTab('quizzes')}>
           Quiz Management ({quizzesList.length})
@@ -141,7 +138,6 @@ export default function AdminDashboardPage() {
         </button>
       </div>
 
-      {/* TAB 1: QUIZ MANAGEMENT */}
       {activeTab === 'quizzes' && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
@@ -193,13 +189,13 @@ export default function AdminDashboardPage() {
                       </td>
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-outline btn-sm" title="Toggle Status" onClick={() => handleTogglePublish(quiz.id)}>
+                          <button className="btn btn-outline btn-sm" title="Toggle Publish Status" onClick={() => handleTogglePublish(quiz.id)}>
                             {isPublished ? <XCircle size={14} color="var(--color-warning)" /> : <CheckCircle size={14} color="var(--color-success)" />}
                           </button>
-                          <button className="btn btn-outline btn-sm" title="Duplicate" onClick={() => handleDuplicateQuiz(quiz)}>
+                          <button className="btn btn-outline btn-sm" title="Duplicate Paper" onClick={() => handleDuplicateQuiz(quiz)}>
                             <Copy size={14} />
                           </button>
-                          <button className="btn btn-outline btn-sm" title="Delete" style={{ color: 'var(--color-error)' }} onClick={() => handleDeleteQuiz(quiz.id)}>
+                          <button className="btn btn-outline btn-sm" title="Delete Paper" style={{ color: 'var(--color-error)' }} onClick={() => handleDeleteQuiz(quiz.id)}>
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -213,7 +209,6 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 2: STUDENT MANAGEMENT */}
       {activeTab === 'students' && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -250,7 +245,6 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 3: PAYMENT DASHBOARD */}
       {activeTab === 'payments' && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -289,19 +283,16 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB 4: OVERVIEW & ANALYTICS */}
       {activeTab === 'analytics' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-          <div className="card">
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Monthly Revenue Growth (LKR)</h3>
-            <div style={{ height: '180px', display: 'flex', alignItems: 'flex-end', gap: '16px', padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
-              {[{ month: 'Apr', val: 180 }, { month: 'May', val: 240 }, { month: 'Jun', val: 320 }, { month: 'Jul', val: 410 }, { month: 'Aug', val: 580 }].map(item => (
-                <div key={item.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '100%', height: `${item.val / 6}px`, backgroundColor: 'var(--color-primary)', borderRadius: '6px 6px 0 0' }}></div>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{item.month}</span>
-                </div>
-              ))}
-            </div>
+        <div className="card">
+          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Monthly Revenue Growth (LKR)</h3>
+          <div style={{ height: '180px', display: 'flex', alignItems: 'flex-end', gap: '16px', padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
+            {[{ month: 'Apr', val: 180 }, { month: 'May', val: 240 }, { month: 'Jun', val: 320 }, { month: 'Jul', val: 410 }, { month: 'Aug', val: 580 }].map(item => (
+              <div key={item.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '100%', height: `${item.val / 6}px`, backgroundColor: 'var(--color-primary)', borderRadius: '6px 6px 0 0' }}></div>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{item.month}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
