@@ -1,5 +1,18 @@
 const { pool } = require('../config/db');
 
+function formatQuiz(quiz) {
+  return {
+    ...quiz,
+    examLevel: quiz.exam_level || quiz.examLevel,
+    subjectId: quiz.subject_id || quiz.subjectId,
+    subjectName: quiz.subject_name || quiz.subjectName,
+    questionCount: quiz.question_count || quiz.questionCount,
+    durationMinutes: quiz.duration_minutes || quiz.durationMinutes,
+    attemptsAllowed: quiz.attempts_allowed || quiz.attemptsAllowed,
+    reviewsCount: quiz.reviews_count || quiz.reviewsCount
+  };
+}
+
 // Seed mock data fallback for quizzes
 const mockQuizzes = [
   {
@@ -78,7 +91,7 @@ exports.getAllQuizzes = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM quizzes WHERE is_published = TRUE');
     if (rows.length > 0) {
-      return res.json({ success: true, quizzes: rows });
+      return res.json({ success: true, quizzes: rows.map(formatQuiz) });
     }
   } catch (err) {
     // fallback
@@ -92,7 +105,7 @@ exports.getQuizById = async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM quizzes WHERE id = ?', [id]);
     if (rows.length > 0) {
       const quiz = rows[0];
-      return res.json({ success: true, quiz });
+      return res.json({ success: true, quiz: formatQuiz(quiz) });
     }
   } catch (err) {
     // fallback

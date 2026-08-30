@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { supabase } from '../services/supabase';
+import { api } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -30,48 +30,20 @@ export const AuthProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : {};
   });
 
-  // REAL USER REGISTRATION (Supabase + Local Database)
   const registerAccount = async (newUserData) => {
-    const emailClean = newUserData.email.toLowerCase().trim();
-    const newUser = {
-      name: newUserData.name.trim() || 'Registered Student',
-      email: emailClean,
-      phone: newUserData.phone || '+94 77 000 0000',
-      password: newUserData.password || 'password123',
-      role: 'student',
-      examLevel: newUserData.examLevel || 'G.C.E. Ordinary Level (O/L)',
-      school: newUserData.school || 'Sri Lankan School',
-      joinedDate: new Date().toISOString().split('T')[0]
-    };
-
-    // Store in Supabase Auth & Users table if configured
-    try {
-      await supabase.from('users').insert([
-        {
-          name: newUser.name,
-          email: newUser.email,
-          phone: newUser.phone,
-          password_hash: newUser.password,
-          role: 'student',
-          exam_level: newUser.examLevel,
-          school: newUser.school
-        }
-      ]);
-    } catch (err) {}
+    const { user: newUser } = await api.register(newUserData);
 
     const db = getStoredUserDatabase();
-    const updatedDb = [newUser, ...db.filter(u => u.email !== emailClean)];
+    const updatedDb = [newUser, ...db.filter(u => u.email !== newUser.email)];
     setUsersDb(updatedDb);
     localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
 
-    // Log the user into their REAL newly created account
     setUser(newUser);
     localStorage.setItem('eduquiz_user', JSON.stringify(newUser));
     return newUser;
   };
 
-  // REAL USER AUTHENTICATION
-  const loginUser = (loginData) => {
+  const loginUser = async (loginData) => {
     const inputEmail = (loginData.email || '').toLowerCase().trim();
     const inputPassword = (loginData.password || '').trim();
 
@@ -89,35 +61,14 @@ export const AuthProvider = ({ children }) => {
       return adminAcc;
     }
 
-    // Lookup in Supabase / Local database
-    const db = getStoredUserDatabase();
-    const found = db.find(u => u.email.toLowerCase() === inputEmail);
-
-    if (found) {
-      setUser(found);
-      localStorage.setItem('eduquiz_user', JSON.stringify(found));
-      return found;
-    }
-
-    // If user provided full details object, save & log in
-    if (loginData.name) {
-      setUser(loginData);
-      localStorage.setItem('eduquiz_user', JSON.stringify(loginData));
-      return loginData;
-    }
-
-    // Create user dynamically for newly registered email
-    const registeredAccount = {
-      name: inputEmail.split('@')[0].toUpperCase(),
+    const { user: found } = await api.login({
       email: inputEmail,
-      phone: '+94 77 123 4567',
-      role: 'student',
-      examLevel: 'G.C.E. Ordinary Level (O/L)',
-      school: 'Registered Student'
-    };
-    setUser(registeredAccount);
-    localStorage.setItem('eduquiz_user', JSON.stringify(registeredAccount));
-    return registeredAccount;
+      password: inputPassword
+    });
+
+    setUser(found);
+    localStorage.setItem('eduquiz_user', JSON.stringify(found));
+    return found;
   };
 
   const logoutUser = () => {

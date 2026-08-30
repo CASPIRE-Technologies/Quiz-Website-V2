@@ -65,6 +65,7 @@ export default function App() {
             <Route path="/results-history" element={<ResultsHistoryPage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/create-quiz" element={<AdminQuizWizardPage />} />
+            <Route path="/admin/edit-quiz/:quizId" element={<AdminQuizWizardPage />} />
           </Routes>
         </LayoutShell>
       </BrowserRouter>

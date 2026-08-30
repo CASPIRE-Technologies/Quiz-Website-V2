@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Sparkles, UserPlus, LogIn } from 'lucide-react';
+import { CheckCircle2, Sparkles, UserPlus, LogIn, XCircle } from 'lucide-react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -15,7 +15,9 @@ export default function AuthPage() {
   const [school, setSchool] = useState('');
   
   const [isSplashing, setIsSplashing] = useState(false);
+  const [authPanelStatus, setAuthPanelStatus] = useState('success');
   const [activeAccountName, setActiveAccountName] = useState('');
+  const [authError, setAuthError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,38 +31,46 @@ export default function AuthPage() {
 
     const isAdminAuth = (trimmedEmail === 'admin' || trimmedEmail === 'admin@eduquiz.lk') && (trimmedPass === 'admin@123' || trimmedPass === 'admin');
 
-    setIsSplashing(true);
+    setIsSplashing(false);
+    setAuthError('');
+    setActiveAccountName('');
 
     setTimeout(async () => {
-      if (isAdminAuth) {
-        setActiveAccountName('System Administrator');
-        loginUser({
-          name: 'System Administrator',
-          email: 'admin@eduquiz.lk',
-          phone: '+94 11 200 0000',
-          role: 'admin',
-          examLevel: 'Administrator'
-        });
-        navigate('/admin');
-      } else if (isSignUp) {
-        // Create Real Student Account in Supabase & Database
-        const registered = await registerAccount({
-          name: name.trim() || 'New Student',
-          email: trimmedEmail,
-          password: trimmedPass,
-          examLevel,
-          school: school.trim() || 'Sri Lankan School'
-        });
-        setActiveAccountName(registered.name);
-        navigate('/dashboard');
-      } else {
-        // Sign in Real Registered Student Account
-        const loggedIn = loginUser({
-          email: trimmedEmail,
-          password: trimmedPass
-        });
-        setActiveAccountName(loggedIn.name);
-        navigate('/dashboard');
+      try {
+        let nextUser;
+        let nextRoute = '/dashboard';
+
+        if (isAdminAuth) {
+          nextUser = await loginUser({
+            email: trimmedEmail,
+            password: trimmedPass
+          });
+          nextRoute = '/admin';
+        } else if (isSignUp) {
+          nextUser = await registerAccount({
+            name: name.trim() || 'New Student',
+            email: trimmedEmail,
+            password: trimmedPass,
+            examLevel,
+            school: school.trim() || 'Sri Lankan School'
+          });
+        } else {
+          nextUser = await loginUser({
+            email: trimmedEmail,
+            password: trimmedPass
+          });
+        }
+
+        setAuthPanelStatus('success');
+        setActiveAccountName(nextUser.name || nextUser.email || 'Student');
+        setIsSplashing(true);
+        setTimeout(() => navigate(nextRoute), 900);
+      } catch (err) {
+        setActiveAccountName('');
+        setAuthPanelStatus('error');
+        setAuthError(err.message || 'Invalid username or password');
+        setIsSplashing(true);
+        setTimeout(() => setIsSplashing(false), 1400);
       }
     }, 800);
   };
@@ -83,9 +93,13 @@ export default function AuthPage() {
             width: '100px',
             height: '100px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, #7C3AED 0%, #2563EB 40%, #10B981 70%, #EC4899 100%)',
+            background: authPanelStatus === 'success'
+              ? 'radial-gradient(circle, #7C3AED 0%, #2563EB 40%, #10B981 70%, #EC4899 100%)'
+              : 'radial-gradient(circle, #FEE2E2 0%, #F97316 35%, #EF4444 70%, #991B1B 100%)',
             animation: 'circleSplashExpand 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-            boxShadow: '0 0 120px rgba(124, 58, 237, 0.9)'
+            boxShadow: authPanelStatus === 'success'
+              ? '0 0 120px rgba(124, 58, 237, 0.9)'
+              : '0 0 120px rgba(239, 68, 68, 0.75)'
           }} />
 
           <div style={{
@@ -104,20 +118,24 @@ export default function AuthPage() {
               width: '68px',
               height: '68px',
               borderRadius: '50%',
-              backgroundColor: 'var(--color-success-light)',
-              color: 'var(--color-success)',
+              backgroundColor: authPanelStatus === 'success' ? 'var(--color-success-light)' : 'var(--color-error-light)',
+              color: authPanelStatus === 'success' ? 'var(--color-success)' : 'var(--color-error)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px auto'
             }}>
-              <CheckCircle2 size={38} />
+              {authPanelStatus === 'success' ? <CheckCircle2 size={38} /> : <XCircle size={38} />}
             </div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {activeAccountName === 'System Administrator' ? 'Admin Access Granted!' : (isSignUp ? 'Real Account Created!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
+              {authPanelStatus === 'success'
+                ? (activeAccountName === 'System Administrator' ? 'Admin Access Granted!' : `Welcome, ${activeAccountName}!`)
+                : 'Incorrect Login'} {authPanelStatus === 'success' && <Sparkles size={24} color="#F59E0B" />}
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              Logging into Supabase database as <strong>{activeAccountName || 'Real Student Account'}</strong>...
+              {authPanelStatus === 'success'
+                ? <>Logging into Supabase database as <strong>{activeAccountName}</strong>...</>
+                : (authError || 'The username or password is incorrect.')}
             </p>
           </div>
         </div>
@@ -134,6 +152,12 @@ export default function AuthPage() {
               <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Create Real Account</h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Register your personal student account on Supabase</p>
             </div>
+
+            {authError && (
+              <div style={{ backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px', fontWeight: 600 }}>
+                {authError}
+              </div>
+            )}
 
             <div className="form-group">
               <label className="form-label">Full Name *</label>
@@ -196,6 +220,12 @@ export default function AuthPage() {
                 Sign in with your registered account credentials
               </p>
             </div>
+
+            {authError && (
+              <div style={{ backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px', fontWeight: 600 }}>
+                {authError}
+              </div>
+            )}
 
             <div className="form-group">
               <label className="form-label">Email or Username</label>

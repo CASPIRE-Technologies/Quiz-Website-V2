@@ -101,3 +101,17 @@ INSERT INTO exam_levels (id, name, badge, description) VALUES
 ('ol', 'G.C.E. Ordinary Level (O/L)', 'Secondary Level', 'Core subjects & model papers'),
 ('al', 'G.C.E. Advanced Level (A/L)', 'Senior Level', 'Stream-specific past papers')
 ON CONFLICT (id) DO NOTHING;
+
+-- Insert Seed Subjects
+INSERT INTO subjects (id, exam_level_id, name, category) VALUES
+('math', 'ol', 'Mathematics', 'Core'),
+('science', 'ol', 'Science', 'Core'),
+('english', 'ol', 'English', 'Core'),
+('physics', 'al', 'Physics', 'Physical Science'),
+('chemistry', 'al', 'Chemistry', 'Physical Science'),
+('biology', 'al', 'Biology', 'Biological Science'),
+('g5_iq', 'g5', 'General Knowledge & IQ', 'Scholarship')
+ON CONFLICT (id) DO UPDATE SET
+  exam_level_id = EXCLUDED.exam_level_id,
+  name = EXCLUDED.name,
+  category = EXCLUDED.category;

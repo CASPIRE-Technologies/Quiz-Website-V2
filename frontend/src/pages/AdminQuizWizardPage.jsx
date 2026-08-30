@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2, ArrowLeft, ArrowRight, Check, Eye, HelpCircle, FileText } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function AdminQuizWizardPage() {
   const navigate = useNavigate();
+  const { quizId } = useParams();
+  const isEditMode = Boolean(quizId);
   const [step, setStep] = useState(1);
 
   // Step 1: Basic Information
@@ -30,6 +32,35 @@ export default function AdminQuizWizardPage() {
       explanation: 'Divide the equation by 2: x² - 4x + 3 = 0. Factorize: (x - 1)(x - 3) = 0. Therefore, x = 1 or x = 3.'
     }
   ]);
+
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    async function loadQuiz() {
+      const res = await api.getQuizById(quizId);
+      if (!res.success || !res.quiz) {
+        alert('Unable to load quiz for editing.');
+        navigate('/admin');
+        return;
+      }
+
+      const quiz = res.quiz;
+      setTitle(quiz.title || '');
+      setExamLevel(quiz.examLevel || quiz.exam_level || 'ol');
+      setStreamId(quiz.streamId || quiz.stream_id || 'physical');
+      setSubjectName(quiz.subjectName || quiz.subject_name || 'Mathematics');
+      setDescription(quiz.about || quiz.description || '');
+      setDifficulty(quiz.difficulty || 'Medium');
+      setDuration(Number(quiz.durationMinutes || quiz.duration_minutes || 45));
+      setPrice(Number(quiz.price || 300));
+      setAttempts(Number(quiz.attemptsAllowed || quiz.attempts_allowed || 1));
+      if (Array.isArray(quiz.questions) && quiz.questions.length > 0) {
+        setQuestions(quiz.questions);
+      }
+    }
+
+    loadQuiz();
+  }, [isEditMode, navigate, quizId]);
 
   // Question editing helper handlers
   const handleAddQuestion = () => {
@@ -100,10 +131,15 @@ export default function AdminQuizWizardPage() {
       is_published: true
     };
 
-    const res = await api.createQuiz(quizPayload);
+    const res = isEditMode
+      ? await api.updateQuiz(quizId, quizPayload)
+      : await api.createQuiz(quizPayload);
+
     if (res.success) {
-      alert(`🎉 Quiz Paper "${title}" with ${questions.length} Question(s) created and published live successfully!`);
+      alert(`Quiz Paper "${title}" ${isEditMode ? 'updated' : 'created and published'} successfully!`);
       navigate('/admin');
+    } else {
+      alert(res.message || `Quiz ${isEditMode ? 'update' : 'creation'} failed.`);
     }
   };
 
@@ -114,8 +150,8 @@ export default function AdminQuizWizardPage() {
         {/* Wizard Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
-            <h1 style={{ fontSize: '26px', fontWeight: 800 }}>Create New Quiz Paper (5-Step Wizard)</h1>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Build quiz questions & options from frontend and publish live</p>
+            <h1 style={{ fontSize: '26px', fontWeight: 800 }}>{isEditMode ? 'Edit Quiz Paper' : 'Create New Quiz Paper'} (5-Step Wizard)</h1>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>{isEditMode ? 'Update quiz details and publish changes live' : 'Build quiz questions & options from frontend and publish live'}</p>
           </div>
           <button className="btn btn-outline" onClick={() => navigate('/admin')}>
             <ArrowLeft size={16} /> Exit Wizard
@@ -401,7 +437,7 @@ export default function AdminQuizWizardPage() {
 
             <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>Ready to Publish Live!</h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', maxWidth: '480px', margin: '0 auto 24px auto' }}>
-              Paper <strong>"{title}"</strong> with {questions.length} question(s) will be published live to the Express REST backend and MySQL database for students to enroll and attempt.
+              Paper <strong>"{title}"</strong> with {questions.length} question(s) will be {isEditMode ? 'updated' : 'published'} live to the Express REST backend and Supabase database for students to enroll and attempt.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
@@ -409,7 +445,7 @@ export default function AdminQuizWizardPage() {
                 Back to Preview
               </button>
               <button className="btn btn-primary btn-lg" onClick={handlePublish}>
-                🚀 Publish Quiz Live Now
+                {isEditMode ? 'Save Quiz Changes' : 'Publish Quiz Live Now'}
               </button>
             </div>
           </div>

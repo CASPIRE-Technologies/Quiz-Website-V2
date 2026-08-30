@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Copy, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -43,18 +43,15 @@ export default function AdminDashboardPage() {
     loadData();
   }, []);
 
-  const handleAdminGateSubmit = (e) => {
+  const handleAdminGateSubmit = async (e) => {
     if (e) e.preventDefault();
     const u = adminUser.trim().toLowerCase();
     const p = adminPass.trim();
 
-    if ((u === 'admin' || u === 'admin@eduquiz.lk' || u === '') && (p === 'admin@123' || p === 'admin' || p === '')) {
-      loginUser({
-        name: 'System Administrator',
-        email: 'admin@eduquiz.lk',
-        phone: '+94 11 200 0000',
-        role: 'admin',
-        examLevel: 'Administrator'
+    if ((u === 'admin' || u === 'admin@eduquiz.lk') && (p === 'admin@123' || p === 'admin')) {
+      await loginUser({
+        email: u,
+        password: p
       });
       setLoginError('');
     } else {
@@ -145,17 +142,6 @@ export default function AdminDashboardPage() {
       setQuizzesList(updated);
       await api.updateQuizzesList(updated);
     }
-  };
-
-  const handleDuplicateQuiz = async (quiz) => {
-    const duplicated = {
-      ...quiz,
-      id: `quiz-dup-${Date.now()}`,
-      title: `${quiz.title} (Copy)`
-    };
-    const updated = [duplicated, ...quizzesList];
-    setQuizzesList(updated);
-    await api.updateQuizzesList(updated);
   };
 
   return (
@@ -303,8 +289,8 @@ export default function AdminDashboardPage() {
                             <button className="btn btn-outline btn-sm" title="Toggle Status" onClick={() => handleTogglePublish(quiz.id)}>
                               {isPublished ? <XCircle size={14} color="var(--color-warning)" /> : <CheckCircle size={14} color="var(--color-success)" />}
                             </button>
-                            <button className="btn btn-outline btn-sm" title="Duplicate Paper" onClick={() => handleDuplicateQuiz(quiz)}>
-                              <Copy size={14} />
+                            <button className="btn btn-outline btn-sm" title="Edit Quiz" onClick={() => navigate(`/admin/edit-quiz/${quiz.id}`)}>
+                              <Pencil size={14} />
                             </button>
                             <button className="btn btn-outline btn-sm" title="Delete Paper" style={{ color: 'var(--color-error)' }} onClick={() => handleDeleteQuiz(quiz.id)}>
                               <Trash2 size={14} />

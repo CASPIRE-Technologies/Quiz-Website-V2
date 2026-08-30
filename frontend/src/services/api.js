@@ -95,6 +95,32 @@ function saveStoredQuizzes(quizzes) {
 }
 
 export const api = {
+  async register(userData) {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Registration failed');
+    }
+    return data;
+  },
+
+  async login(credentials) {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Invalid email or password');
+    }
+    return data;
+  },
+
   async getQuizzes() {
     try {
       const res = await fetch(`${API_BASE_URL}/quizzes`);
@@ -173,39 +199,39 @@ export const api = {
   },
 
   async createQuiz(quizData) {
-    const list = getStoredQuizzes();
-    const newQuiz = {
-      id: quizData.id || `quiz-custom-${Date.now()}`,
-      title: quizData.title || "Custom Model Paper",
-      examLevel: quizData.examLevel || "ol",
-      streamId: quizData.streamId || null,
-      subjectId: quizData.subjectId || "math",
-      subjectName: quizData.subjectName || "Mathematics",
-      questionCount: quizData.questions ? quizData.questions.length : 30,
-      durationMinutes: quizData.duration || 45,
-      difficulty: quizData.difficulty || "Medium",
-      price: quizData.price || 300,
-      currency: "LKR",
-      attemptsAllowed: 1,
-      rating: 5.0,
-      reviewsCount: 1,
-      about: quizData.description || "Newly created examination paper.",
-      is_published: true,
-      questions: quizData.questions || []
-    };
-
-    list.unshift(newQuiz);
-    saveStoredQuizzes(list);
-
     try {
-      await fetch(`${API_BASE_URL}/admin/quizzes/create`, {
+      const res = await fetch(`${API_BASE_URL}/admin/quizzes/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(quizData)
       });
-    } catch (err) {}
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Quiz creation failed');
+      }
+      const refreshed = await this.getQuizzes();
+      return { success: true, message: data.message || 'Quiz created successfully', quizId: data.quizId, quizzes: refreshed.quizzes };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  },
 
-    return { success: true, message: 'Quiz created successfully', quiz: newQuiz };
+  async updateQuiz(id, quizData) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/quizzes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quizData)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Quiz update failed');
+      }
+      const refreshed = await this.getQuizzes();
+      return { success: true, message: data.message || 'Quiz updated successfully', quizId: data.quizId, quizzes: refreshed.quizzes };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
   },
 
   async updateQuizzesList(quizzes) {
