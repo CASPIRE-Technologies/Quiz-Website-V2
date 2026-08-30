@@ -337,17 +337,73 @@ body {
   border-color: var(--color-primary);
 }
 
-/* Color Splash Animation Keyframes */
+/* Sliding Split Panel Auth Animation CSS */
+.auth-page-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--color-bg);
+}
+
+.auth-hero-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 45%, #7C3AED 100%);
+  color: white;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 10;
+  transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), background 0.8s ease;
+}
+
+.auth-hero-panel.active-signup {
+  transform: translateX(100%);
+  background: linear-gradient(135deg, #7C3AED 0%, #EC4899 55%, #2563EB 100%);
+}
+
+.auth-hero-panel.splashing-login {
+  width: 100%;
+  transform: translateX(0);
+  background: linear-gradient(135deg, #10B981 0%, #2563EB 50%, #7C3AED 100%);
+  animation: splashColorWave 1.2s infinite ease-in-out alternate;
+}
+
+.auth-form-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  z-index: 5;
+  transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.auth-form-panel.active-signup {
+  transform: translateX(-100%);
+}
+
+/* Color Splash Animations */
 @keyframes circleSplashExpand {
   0% {
     transform: scale(0);
-    opacity: 0.85;
+    opacity: 0.9;
   }
   50% {
     opacity: 1;
   }
   100% {
-    transform: scale(50);
+    transform: scale(60);
     opacity: 1;
   }
 }
@@ -356,24 +412,21 @@ body {
   0% {
     background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #7C3AED 100%);
   }
-  33% {
-    background: linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #2563EB 100%);
-  }
-  66% {
-    background: linear-gradient(135deg, #10B981 0%, #2563EB 50%, #7C3AED 100%);
+  50% {
+    background: linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #10B981 100%);
   }
   100% {
-    background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #7C3AED 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #10B981 100%);
   }
 }
 
 @keyframes splashPopIn {
   0% {
-    transform: scale(0.6) translateY(20px);
+    transform: scale(0.5) translateY(30px);
     opacity: 0;
   }
   70% {
-    transform: scale(1.06) translateY(-4px);
+    transform: scale(1.08) translateY(-6px);
     opacity: 1;
   }
   100% {
@@ -398,5 +451,12 @@ body {
   }
   .header-search-wrap {
     display: none !important;
+  }
+  .auth-hero-panel {
+    display: none;
+  }
+  .auth-form-panel {
+    width: 100%;
+    transform: none !important;
   }
 }
