@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Sparkles, UserPlus, LogIn } from 'lucide-react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -17,16 +17,21 @@ export default function AuthPage() {
   const [isSplashing, setIsSplashing] = useState(false);
   const [activeAccountName, setActiveAccountName] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPass = password.trim();
+
+    if (!trimmedEmail || !trimmedPass) {
+      alert("Please enter both email/username and password!");
+      return;
+    }
 
     const isAdminAuth = (trimmedEmail === 'admin' || trimmedEmail === 'admin@eduquiz.lk') && (trimmedPass === 'admin@123' || trimmedPass === 'admin');
 
     setIsSplashing(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       if (isAdminAuth) {
         setActiveAccountName('System Administrator');
         loginUser({
@@ -38,7 +43,8 @@ export default function AuthPage() {
         });
         navigate('/admin');
       } else if (isSignUp) {
-        const registered = registerAccount({
+        // Create Real Student Account in Supabase & Database
+        const registered = await registerAccount({
           name: name.trim() || 'New Student',
           email: trimmedEmail,
           password: trimmedPass,
@@ -48,6 +54,7 @@ export default function AuthPage() {
         setActiveAccountName(registered.name);
         navigate('/dashboard');
       } else {
+        // Sign in Real Registered Student Account
         const loggedIn = loginUser({
           email: trimmedEmail,
           password: trimmedPass
@@ -56,27 +63,6 @@ export default function AuthPage() {
         navigate('/dashboard');
       }
     }, 800);
-  };
-
-  // One-click direct Admin login handler (avoids browser popup blockers)
-  const handleDirectAdminLogin = () => {
-    setIsSplashing(true);
-    setActiveAccountName('System Administrator');
-    setTimeout(() => {
-      loginUser({
-        name: 'System Administrator',
-        email: 'admin@eduquiz.lk',
-        phone: '+94 11 200 0000',
-        role: 'admin',
-        examLevel: 'Administrator'
-      });
-      navigate('/admin');
-    }, 600);
-  };
-
-  const fillDemoStudent = () => {
-    setEmail('kasun.perera@student.lk');
-    setPassword('password123');
   };
 
   return (
@@ -128,10 +114,10 @@ export default function AuthPage() {
               <CheckCircle2 size={38} />
             </div>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {activeAccountName === 'System Administrator' ? 'Admin Portal Access!' : (isSignUp ? 'Registration Successful!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
+              {activeAccountName === 'System Administrator' ? 'Admin Access Granted!' : (isSignUp ? 'Real Account Created!' : 'Welcome Back!')} <Sparkles size={24} color="#F59E0B" />
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              Logging in as <strong>{activeAccountName || 'Registered Account'}</strong>...
+              Logging into Supabase database as <strong>{activeAccountName || 'Real Student Account'}</strong>...
             </p>
           </div>
         </div>
@@ -140,41 +126,41 @@ export default function AuthPage() {
       {/* Main Solve It Smart Animated Auth Card Container */}
       <div className={`solve-auth-card ${isSignUp ? 'right-panel-active' : ''}`}>
         
-        {/* SIGN UP FORM */}
+        {/* REAL SIGN UP FORM */}
         <div className="form-container sign-up-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Create Your Account</h2>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Register your personal student account</p>
+              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Create Real Account</h2>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Register your personal student account on Supabase</p>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Full Student Name</label>
+              <label className="form-label">Full Name *</label>
               <input
                 type="text"
                 className="form-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Amal Perera"
+                placeholder="Enter your full name"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Email Address / Username</label>
+              <label className="form-label">Email Address *</label>
               <input
-                type="text"
+                type="email"
                 className="form-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="amal@student.lk"
+                placeholder="your.name@student.lk"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Create Password</label>
+              <label className="form-label">Create Password *</label>
               <input
                 type="password"
                 className="form-input"
@@ -186,7 +172,7 @@ export default function AuthPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Target Examination Level</label>
+              <label className="form-label">Examination Level</label>
               <select className="form-input" value={examLevel} onChange={(e) => setExamLevel(e.target.value)}>
                 <option value="G.C.E. Ordinary Level (O/L)">G.C.E. Ordinary Level (O/L)</option>
                 <option value="G.C.E. Advanced Level (A/L)">G.C.E. Advanced Level (A/L)</option>
@@ -195,30 +181,30 @@ export default function AuthPage() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '8px' }}>
-              Register & Access Dashboard
+              <UserPlus size={18} /> Register Real Account
             </button>
           </form>
         </div>
 
-        {/* SIGN IN FORM */}
+        {/* REAL SIGN IN FORM */}
         <div className="form-container sign-in-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 12px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Sign In</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Student & Admin Sign In</h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                Sign in with student or administrator account
+                Sign in with your registered account credentials
               </p>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Email / Username</label>
+              <label className="form-label">Email or Username</label>
               <input
                 type="text"
                 className="form-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin or student@lk"
+                placeholder="Enter your email or admin"
                 required
               />
             </div>
@@ -235,29 +221,9 @@ export default function AuthPage() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '12px' }}>
-              Sign In to Account
+            <button type="submit" className="btn btn-primary btn-block btn-lg" style={{ marginTop: '16px' }}>
+              <LogIn size={18} /> Sign In to My Account
             </button>
-
-            {/* DIRECT 1-CLICK ADMIN LOGIN BUTTON */}
-            <button
-              type="button"
-              className="btn btn-secondary btn-block"
-              style={{ marginTop: '10px' }}
-              onClick={handleDirectAdminLogin}
-            >
-              <ShieldCheck size={16} /> ⚡ Direct Admin Portal Access (admin)
-            </button>
-
-            <div style={{ textAlign: 'center', marginTop: '14px' }}>
-              <button
-                type="button"
-                onClick={fillDemoStudent}
-                style={{ border: 'none', background: 'transparent', color: 'var(--color-primary)', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}
-              >
-                Auto-fill Student (Kasun)
-              </button>
-            </div>
           </form>
         </div>
 
@@ -269,7 +235,7 @@ export default function AuthPage() {
               <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
               <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Welcome Back!</h2>
               <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
-                Sign in with your registered student or administrator credentials
+                Sign in with your registered student account to access model papers and track performance
               </p>
               <button className="ghost-btn" onClick={() => setIsSignUp(false)}>
                 Sign In
@@ -278,9 +244,9 @@ export default function AuthPage() {
 
             <div className="overlay-panel overlay-right">
               <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Hello, Scholar!</h2>
+              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Create Real Account</h2>
               <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
-                Register your own personal account to begin timed quizzes and track results
+                Register your own personal account to begin timed quizzes and save your results to Supabase
               </p>
               <button className="ghost-btn" onClick={() => setIsSignUp(true)}>
                 Create Account

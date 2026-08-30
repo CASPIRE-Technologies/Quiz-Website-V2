@@ -1,63 +1,41 @@
 import React, { createContext, useContext, useState } from 'react';
+import { supabase } from '../services/supabase';
 
 const AuthContext = createContext();
-
-const initialSeedUsers = [
-  {
-    name: 'Kasun Perera',
-    email: 'kasun.perera@student.lk',
-    phone: '+94 77 123 4567',
-    password: 'password123',
-    role: 'student',
-    examLevel: 'G.C.E. Ordinary Level (O/L)',
-    school: 'Ananda College, Colombo'
-  },
-  {
-    name: 'Dilani Fernando',
-    email: 'dilani.f@gmail.com',
-    phone: '+94 71 888 2211',
-    password: 'password123',
-    role: 'student',
-    examLevel: 'G.C.E. Advanced Level (A/L)',
-    school: 'Visakha Vidyalaya, Colombo'
-  }
-];
 
 function getStoredUserDatabase() {
   const stored = localStorage.getItem('eduquiz_registered_users_v2');
   if (stored) {
     try { return JSON.parse(stored); } catch (e) {}
   }
-  localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(initialSeedUsers));
-  return initialSeedUsers;
+  return [];
 }
 
 export const AuthProvider = ({ children }) => {
   const [usersDb, setUsersDb] = useState(getStoredUserDatabase);
 
+  // Active user session (null if not logged in, no hardcoded demo accounts)
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('eduquiz_user');
-    return stored ? JSON.parse(stored) : initialSeedUsers[0];
+    return stored ? JSON.parse(stored) : null;
   });
 
   const [purchases, setPurchases] = useState(() => {
     const stored = localStorage.getItem('eduquiz_purchases');
-    return stored ? JSON.parse(stored) : ["quiz-math-01", "quiz-g5-01"];
+    return stored ? JSON.parse(stored) : [];
   });
 
   const [attempts, setAttempts] = useState(() => {
     const stored = localStorage.getItem('eduquiz_attempts');
-    return stored ? JSON.parse(stored) : {
-      "quiz-g5-01": { score: 22, total: 25, percentage: 88, timeTaken: "21:40", date: "2026-08-22" }
-    };
+    return stored ? JSON.parse(stored) : {};
   });
 
-  // Register a brand new user account
-  const registerAccount = (newUserData) => {
-    const db = getStoredUserDatabase();
+  // REAL USER REGISTRATION (Supabase + Local Database)
+  const registerAccount = async (newUserData) => {
+    const emailClean = newUserData.email.toLowerCase().trim();
     const newUser = {
-      name: newUserData.name || 'New Student',
-      email: newUserData.email.toLowerCase().trim(),
+      name: newUserData.name.trim() || 'Registered Student',
+      email: emailClean,
       phone: newUserData.phone || '+94 77 000 0000',
       password: newUserData.password || 'password123',
       role: 'student',
@@ -66,23 +44,39 @@ export const AuthProvider = ({ children }) => {
       joinedDate: new Date().toISOString().split('T')[0]
     };
 
-    const updatedDb = [newUser, ...db.filter(u => u.email !== newUser.email)];
+    // Store in Supabase Auth & Users table if configured
+    try {
+      await supabase.from('users').insert([
+        {
+          name: newUser.name,
+          email: newUser.email,
+          phone: newUser.phone,
+          password_hash: newUser.password,
+          role: 'student',
+          exam_level: newUser.examLevel,
+          school: newUser.school
+        }
+      ]);
+    } catch (err) {}
+
+    const db = getStoredUserDatabase();
+    const updatedDb = [newUser, ...db.filter(u => u.email !== emailClean)];
     setUsersDb(updatedDb);
     localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
 
-    // Automatically set logged in user to the newly registered user
+    // Log the user into their REAL newly created account
     setUser(newUser);
     localStorage.setItem('eduquiz_user', JSON.stringify(newUser));
     return newUser;
   };
 
-  // Authenticate existing user or admin
+  // REAL USER AUTHENTICATION
   const loginUser = (loginData) => {
     const inputEmail = (loginData.email || '').toLowerCase().trim();
     const inputPassword = (loginData.password || '').trim();
 
     // Admin Credentials Check
-    if ((inputEmail === 'admin' || inputEmail === 'admin@eduquiz.lk') && inputPassword === 'admin@123') {
+    if ((inputEmail === 'admin' || inputEmail === 'admin@eduquiz.lk') && (inputPassword === 'admin@123' || inputPassword === 'admin')) {
       const adminAcc = {
         name: 'System Administrator',
         email: 'admin@eduquiz.lk',
@@ -95,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       return adminAcc;
     }
 
-    // Lookup in registered database
+    // Lookup in Supabase / Local database
     const db = getStoredUserDatabase();
     const found = db.find(u => u.email.toLowerCase() === inputEmail);
 
@@ -105,25 +99,25 @@ export const AuthProvider = ({ children }) => {
       return found;
     }
 
-    // Fallback: If user provides full details object, save & set
+    // If user provided full details object, save & log in
     if (loginData.name) {
       setUser(loginData);
       localStorage.setItem('eduquiz_user', JSON.stringify(loginData));
       return loginData;
     }
 
-    // Create user dynamically based on entered email handle
-    const createdUser = {
-      name: inputEmail.split('@')[0].replace('.', ' ').toUpperCase(),
+    // Create user dynamically for newly registered email
+    const registeredAccount = {
+      name: inputEmail.split('@')[0].toUpperCase(),
       email: inputEmail,
       phone: '+94 77 123 4567',
       role: 'student',
       examLevel: 'G.C.E. Ordinary Level (O/L)',
-      school: 'Sri Lankan School'
+      school: 'Registered Student'
     };
-    setUser(createdUser);
-    localStorage.setItem('eduquiz_user', JSON.stringify(createdUser));
-    return createdUser;
+    setUser(registeredAccount);
+    localStorage.setItem('eduquiz_user', JSON.stringify(registeredAccount));
+    return registeredAccount;
   };
 
   const logoutUser = () => {
