@@ -58,45 +58,19 @@ body {
   min-height: 100vh;
 }
 
-/* App Container Layout */
+/* App Container Layout (top-nav-only) */
 .app-container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   width: 100%;
 }
 
-.desktop-sidebar {
-  width: var(--sidebar-width);
-  background-color: var(--color-card-bg);
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 40;
-}
-
 .main-wrapper {
   flex: 1;
-  margin-left: var(--sidebar-width);
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-
-.top-header {
-  height: var(--header-height);
-  background-color: var(--color-card-bg);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 30;
 }
 
 .page-stage {
@@ -105,20 +79,6 @@ body {
   max-width: var(--max-content-width);
   width: 100%;
   margin: 0 auto;
-}
-
-.mobile-bottom-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--bottom-nav-height);
-  background-color: var(--color-card-bg);
-  border-top: 1px solid var(--color-border);
-  z-index: 40;
-  justify-content: space-around;
-  align-items: center;
 }
 
 /* Common UI Components */
@@ -522,11 +482,7 @@ body {
 
 /* Responsive Rules for Mobile */
 @media (max-width: 1023px) {
-  .desktop-sidebar { display: none; }
-  .main-wrapper { margin-left: 0; }
-  .mobile-bottom-nav { display: flex; }
-  .page-stage { padding: 20px 16px calc(var(--bottom-nav-height) + 20px) 16px; }
-  .header-search-wrap { display: none !important; }
+  .page-stage { padding: 20px 16px; }
 
   .solve-auth-card { min-height: auto; }
   .overlay-container { display: none; }
@@ -534,4 +490,19 @@ body {
   .sign-up-container { display: none; }
   .solve-auth-card.right-panel-active .sign-up-container { display: flex; }
   .solve-auth-card.right-panel-active .sign-in-container { display: none; }
+}
+
+/* ══════════════════════════════════════
+   DASHBOARD RESPONSIVE OVERRIDES
+   ══════════════════════════════════════ */
+@media (max-width: 900px) {
+  .page-stage > div > div[style*="1.6fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-stage > div > div[style*="minmax(200px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }

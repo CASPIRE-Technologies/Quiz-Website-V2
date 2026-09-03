@@ -1,183 +1,527 @@
-import React, { useState } from 'react';
-import { Search, Bell, Menu, X, Home, BookOpen, Award, User, LogOut, LogIn, ShieldCheck } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Search, BookOpen, Award, User, LogOut, LogIn, ShieldCheck, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+const NAV_HEIGHT = 64;
+
+const navItems = [
+  { path: '/dashboard', label: 'Dashboard', icon: Home },
+  { path: '/quizzes', label: 'Browse Quizzes', icon: Search },
+  { path: '/my-quizzes', label: 'My Quizzes', icon: BookOpen },
+  { path: '/results-history', label: 'Results & Performance', icon: Award },
+  { path: '/profile', label: 'Student Profile', icon: User },
+  { path: '/admin', label: 'Admin Portal', icon: ShieldCheck },
+];
 
 export default function TopHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logoutUser } = useAuth();
-  const [query, setQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const handleSearch = (e) => {
-    if (e.key === 'Enter' && query.trim()) {
-      navigate(`/quizzes?query=${encodeURIComponent(query.trim())}`);
-    }
+  const isCurrent = (path) => {
+    if (path === '/dashboard') return location.pathname === '/dashboard';
+    return location.pathname.startsWith(path);
   };
 
   const handleSignOut = () => {
     logoutUser();
     setUserDropdownOpen(false);
+    setMobileMenuOpen(false);
     navigate('/login');
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <>
-      <header className="top-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* ═══════════════════════════════════════════════════════
+          FIXED TOP NAVIGATION BAR
+          ═══════════════════════════════════════════════════════ */}
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: `${NAV_HEIGHT}px`,
+        backgroundColor: 'var(--color-card-bg)',
+        borderBottom: '1px solid var(--color-border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        zIndex: 200,
+        boxShadow: '0 1px 8px rgba(15, 23, 42, 0.06)',
+      }}>
+
+        {/* ── Left section: Hamburger + Logo ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Mobile hamburger */}
           <button
-            className="icon-btn"
-            style={{ display: 'flex' }}
+            className="topnav-hamburger"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            title="Toggle Navigation Menu"
+            style={{
+              display: 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '38px',
+              height: '38px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-bg)',
+              color: 'var(--color-text-main)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'all 0.2s ease',
+            }}
           >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-            <div className="logo-badge" style={{ width: '32px', height: '32px', fontSize: '16px' }}>EQ</div>
-            <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--color-text-main)' }}>EduQuiz Pro</span>
-          </div>
+          {/* Logo */}
+          <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <div className="logo-badge" style={{ width: '36px', height: '36px', fontSize: '15px', flexShrink: 0 }}>EQ</div>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--color-text-main)', letterSpacing: '-0.3px' }}>EduQuiz Pro</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-secondary)', fontWeight: 600, letterSpacing: '0.3px' }}>Paid Examination Platform</div>
+            </div>
+          </Link>
 
-          <div style={{ display: 'none', alignItems: 'center', gap: '10px', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', padding: '8px 16px', borderRadius: '9999px', width: '320px' }} className="header-search-wrap">
-            <Search size={16} color="var(--color-text-muted)" />
-            <input
-              type="text"
-              placeholder="Search quizzes, subjects..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleSearch}
-              style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '14px' }}
-            />
+          {/* Divider */}
+          <div className="topnav-divider" style={{ width: '1px', height: '28px', backgroundColor: 'var(--color-border)', margin: '0 6px' }} />
+
+          {/* ── Center: Nav Links (desktop) ── */}
+          <div className="topnav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isCurrent(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`topnav-link ${active ? 'topnav-link-active' : ''}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '13px',
+                    fontWeight: active ? 700 : 500,
+                    color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                    textDecoration: 'none',
+                    position: 'relative',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    backgroundColor: active ? 'var(--color-primary-light)' : 'transparent',
+                  }}
+                >
+                  <Icon size={15} />
+                  <span>{item.label}</span>
+                  {/* Active indicator bar */}
+                  {active && (
+                    <span style={{
+                      position: 'absolute',
+                      bottom: '-8px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '24px',
+                      height: '3px',
+                      borderRadius: '3px',
+                      background: 'linear-gradient(90deg, var(--color-primary), var(--color-secondary))',
+                    }} />
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* ── Right section: User controls ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {user ? (
-            <>
-              <button style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                <Bell size={20} color="var(--color-text-muted)" />
-                <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', backgroundColor: 'var(--color-error)', borderRadius: '50%', border: '2px solid white' }}></span>
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              {/* User pill button */}
+              <button
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="topnav-user-pill"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '4px 12px 4px 4px',
+                  borderRadius: '9999px',
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-card-bg)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <span className="topnav-user-name" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-main)' }}>
+                  {user.name || 'User'}
+                </span>
+                <ChevronDown
+                  size={14}
+                  color="var(--color-text-muted)"
+                  style={{
+                    transition: 'transform 0.2s ease',
+                    transform: userDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  }}
+                />
               </button>
 
-              <div style={{ position: 'relative' }}>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 10px 4px 4px', borderRadius: '9999px', border: '1px solid var(--color-border)', cursor: 'pointer' }}
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                >
-                  <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: 'white', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {user.name ? user.name.charAt(0) : 'U'}
+              {/* Dropdown menu */}
+              {userDropdownOpen && (
+                <div style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 'calc(100% + 8px)',
+                  backgroundColor: 'var(--color-card-bg)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: '0 16px 40px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.08)',
+                  border: '1px solid var(--color-border)',
+                  width: '220px',
+                  padding: '6px',
+                  zIndex: 300,
+                  animation: 'dropdownFadeIn 0.15s ease-out',
+                }}>
+                  {/* User info header */}
+                  <div style={{
+                    padding: '10px 12px',
+                    borderBottom: '1px solid var(--color-border)',
+                    marginBottom: '4px',
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-main)' }}>{user.name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{user.email}</div>
                   </div>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-main)' }}>{user.name}</span>
-                </div>
 
-                {userDropdownOpen && (
-                  <div
+                  {/* Profile link */}
+                  <button
+                    onClick={() => { setUserDropdownOpen(false); navigate('/profile'); }}
+                    className="topnav-dropdown-item"
                     style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: '48px',
-                      backgroundColor: 'white',
-                      borderRadius: '14px',
-                      boxShadow: 'var(--shadow-lg)',
-                      border: '1px solid var(--color-border)',
-                      width: '200px',
-                      padding: '8px',
-                      zIndex: 100
+                      width: '100%',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--color-text-main)',
+                      borderRadius: 'var(--radius-sm)',
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'transparent',
+                      transition: 'background-color 0.15s ease',
+                      fontFamily: 'inherit',
                     }}
                   >
-                    <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--color-border)', marginBottom: '4px' }}>
-                      <div style={{ fontWeight: 700, fontSize: '14px' }}>{user.name}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{user.email}</div>
-                    </div>
-                    <button
-                      onClick={() => { setUserDropdownOpen(false); navigate('/profile'); }}
-                      style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--color-text-main)', borderRadius: '8px', cursor: 'pointer' }}
-                    >
-                      <User size={16} /> Student Profile
-                    </button>
-                    <button
-                      onClick={() => { setUserDropdownOpen(false); navigate('/admin'); }}
-                      style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--color-text-main)', borderRadius: '8px', cursor: 'pointer' }}
-                    >
-                      <ShieldCheck size={16} /> Admin Portal
-                    </button>
-                    <button
-                      onClick={handleSignOut}
-                      style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'var(--color-error)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer' }}
-                    >
-                      <LogOut size={16} /> Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
+                    <User size={15} /> Student Profile
+                  </button>
+
+                  {/* Admin link */}
+                  <button
+                    onClick={() => { setUserDropdownOpen(false); navigate('/admin'); }}
+                    className="topnav-dropdown-item"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--color-text-main)',
+                      borderRadius: 'var(--radius-sm)',
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'transparent',
+                      transition: 'background-color 0.15s ease',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <ShieldCheck size={15} /> Admin Portal
+                  </button>
+
+                  <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '4px 0' }} />
+
+                  {/* Sign out */}
+                  <button
+                    onClick={handleSignOut}
+                    className="topnav-dropdown-item"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: 'var(--color-error)',
+                      borderRadius: 'var(--radius-sm)',
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'transparent',
+                      transition: 'background-color 0.15s ease',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <LogOut size={15} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button className="btn btn-primary btn-sm" onClick={() => navigate('/login')}>
               <LogIn size={16} /> Sign In
             </button>
           )}
         </div>
-      </header>
+      </nav>
 
-      {/* Mobile Slide Drawer Menu */}
+      {/* ═══════════════════════════════════════════════════════
+          MOBILE SLIDE-IN DRAWER
+          ═══════════════════════════════════════════════════════ */}
       {mobileMenuOpen && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.6)',
-            zIndex: 100,
-            display: 'flex'
+            backgroundColor: 'rgba(15, 23, 42, 0.5)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 250,
           }}
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
             style={{
-              width: '280px',
-              backgroundColor: 'white',
+              width: '300px',
+              maxWidth: '85vw',
               height: '100%',
-              padding: '24px 16px',
+              backgroundColor: 'var(--color-card-bg)',
+              padding: '20px 16px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '12px'
+              gap: '4px',
+              overflowY: 'auto',
+              boxShadow: '8px 0 32px rgba(0,0,0,0.15)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <div className="logo-badge" style={{ width: '32px', height: '32px', fontSize: '16px' }}>EQ</div>
-              <span style={{ fontWeight: 700, fontSize: '16px' }}>EduQuiz Pro</span>
+            {/* Drawer header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '14px', borderBottom: '1px solid var(--color-border)' }}>
+              <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+                <div className="logo-badge" style={{ width: '34px', height: '34px', fontSize: '14px' }}>EQ</div>
+                <span style={{ fontWeight: 800, fontSize: '16px', color: 'var(--color-text-main)' }}>EduQuiz Pro</span>
+              </Link>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--color-bg)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-main)',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="nav-item">
-              <Home size={18} /> <span>Dashboard</span>
-            </Link>
-            <Link to="/quizzes" onClick={() => setMobileMenuOpen(false)} className="nav-item">
-              <Search size={18} /> <span>Browse Quizzes</span>
-            </Link>
-            <Link to="/my-quizzes" onClick={() => setMobileMenuOpen(false)} className="nav-item">
-              <BookOpen size={18} /> <span>My Quizzes</span>
-            </Link>
-            <Link to="/results-history" onClick={() => setMobileMenuOpen(false)} className="nav-item">
-              <Award size={18} /> <span>Results & Performance</span>
-            </Link>
-            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="nav-item">
-              <User size={18} /> <span>Student Profile</span>
-            </Link>
-
-            {user ? (
-              <button onClick={() => { logoutUser(); setMobileMenuOpen(false); navigate('/login'); }} className="nav-item" style={{ color: 'var(--color-error)', marginTop: 'auto', width: '100%' }}>
-                <LogOut size={18} /> <span>Sign Out</span>
-              </button>
-            ) : (
-              <button onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} className="btn btn-primary btn-block" style={{ marginTop: 'auto' }}>
-                <LogIn size={18} /> <span>Sign In</span>
-              </button>
+            {/* User info in drawer */}
+            {user && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                backgroundColor: 'var(--color-bg)',
+                borderRadius: 'var(--radius-sm)',
+                marginBottom: '12px',
+              }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-main)' }}>{user.name || 'User'}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user.email}</div>
+                </div>
+              </div>
             )}
+
+            {/* Nav section label */}
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-muted)', padding: '8px 12px', letterSpacing: '0.5px' }}>
+              Navigation
+            </div>
+
+            {/* Nav items */}
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isCurrent(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="nav-item"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '11px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px',
+                    fontWeight: active ? 700 : 500,
+                    color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                    backgroundColor: active ? 'var(--color-primary-light)' : 'transparent',
+                    textDecoration: 'none',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <Icon size={18} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+
+            {/* Sign out at bottom */}
+            <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
+              {user ? (
+                <button
+                  onClick={handleSignOut}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '11px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: 'var(--color-error)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <LogOut size={18} /> Sign Out
+                </button>
+              ) : (
+                <button onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} className="btn btn-primary btn-block">
+                  <LogIn size={18} /> Sign In
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════════════════
+          SCOPED STYLES
+          ═══════════════════════════════════════════════════════ */}
+      <style>{`
+        /* Nav link hover effect */
+        .topnav-link:hover {
+          background-color: var(--color-bg) !important;
+          color: var(--color-primary) !important;
+        }
+
+        /* User pill hover */
+        .topnav-user-pill:hover {
+          border-color: var(--color-primary-border) !important;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+        }
+
+        /* Dropdown item hover */
+        .topnav-dropdown-item:hover {
+          background-color: var(--color-bg) !important;
+        }
+
+        /* Dropdown animation */
+        @keyframes dropdownFadeIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Always show nav links — scrollable on all sizes */
+        .topnav-hamburger { display: none !important; }
+        .topnav-links-desktop {
+          display: flex !important;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none; /* Firefox */
+        }
+        .topnav-links-desktop::-webkit-scrollbar {
+          display: none; /* Chrome/Safari */
+        }
+        .topnav-divider { display: block !important; }
+
+        /* Tablet: hide username text from pill */
+        @media (max-width: 1200px) {
+          .topnav-user-name { display: none !important; }
+        }
+
+        /* Smaller screens: shrink padding on nav links */
+        @media (max-width: 900px) {
+          .topnav-divider { display: none !important; }
+          .topnav-links-desktop .topnav-link {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
+          }
+        }
+      `}</style>
     </>
   );
 }

@@ -2,9 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-import DesktopSidebar from './components/DesktopSidebar';
 import TopHeader from './components/TopHeader';
-import MobileBottomNav from './components/MobileBottomNav';
 
 import AuthPage from './pages/AuthPage';
 import SelectExamLevelPage from './pages/SelectExamLevelPage';
@@ -52,14 +50,10 @@ function LayoutShell({ children }) {
   }
 
   return (
-    <div className="app-container">
-      <DesktopSidebar />
-      <div className="main-wrapper">
-        <TopHeader />
-        <main className="page-stage">{children}</main>
-      </div>
-      <MobileBottomNav />
-    </div>
+    <>
+      <TopHeader />
+      <main className="page-stage" style={{ paddingTop: 'calc(64px + 28px)' }}>{children}</main>
+    </>
   );
 }
 
@@ -95,3 +89,4 @@ export default function App() {
     </AuthProvider>
   );
 }
+

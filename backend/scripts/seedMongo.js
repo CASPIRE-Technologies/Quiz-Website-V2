@@ -12,7 +12,7 @@ function hashPassword(password) {
 
 const MONGO_URI =
   process.env.MONGO_URI ||
-  'mongodb+srv://caspiretechnologies_db_user:NeSrlJiDfLGIdTjs@cluster0.q0xlzer.mongodb.net/edu_pulse_lk_db?retryWrites=true&w=majority';
+  'mongodb://localhost:27017/edu_pulse_lk_db';
 
 const defaultQuizzes = [
   {
