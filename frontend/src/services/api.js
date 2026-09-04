@@ -152,6 +152,29 @@ export const api = {
     }
   },
 
+  async getProfile() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok && data.success) return data;
+    } catch (err) {}
+    return { success: false };
+  },
+
+  async updateProfile(profileData) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(profileData)
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to update profile on server' };
+    }
+  },
+
   async getQuizzes() {
     const localList = getStoredQuizzes();
     try {
