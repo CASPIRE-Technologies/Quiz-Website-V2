@@ -9,7 +9,7 @@ const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: Home },
   { path: '/quizzes', label: 'Browse Quizzes', icon: Search },
   { path: '/my-quizzes', label: 'My Quizzes', icon: BookOpen },
-  { path: '/results-history', label: 'Results & Performance', icon: Award },
+  { path: '/results-history', label: 'My Performance', icon: Award },
   { path: '/profile', label: 'Student Profile', icon: User },
   { path: '/admin', label: 'Admin Portal', icon: ShieldCheck },
 ];
@@ -24,6 +24,9 @@ export default function TopHeader() {
 
   const isCurrent = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
+    if (path === '/results-history') {
+      return location.pathname.startsWith('/results') || location.pathname.startsWith('/my-performance');
+    }
     return location.pathname.startsWith(path);
   };
 

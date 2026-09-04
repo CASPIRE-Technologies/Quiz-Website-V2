@@ -79,6 +79,8 @@ export default function App() {
               <Route path="/quiz/:quizId/review" element={<AnswerReviewPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/results-history" element={<ResultsHistoryPage />} />
+              <Route path="/results" element={<ResultsHistoryPage />} />
+              <Route path="/my-performance" element={<ResultsHistoryPage />} />
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/admin/create-quiz" element={<AdminQuizWizardPage />} />
               <Route path="/admin/edit-quiz/:quizId" element={<AdminQuizWizardPage />} />

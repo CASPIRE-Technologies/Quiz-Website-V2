@@ -155,6 +155,27 @@ export default function DashboardPage() {
               >
                 <BookOpen size={15} /> Browse Papers
               </button>
+              <button
+                className="btn"
+                onClick={() => navigate('/results-history')}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(10px)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  padding: '11px 22px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <Award size={15} /> My Performance
+              </button>
             </div>
           </div>
 
@@ -429,9 +450,28 @@ export default function DashboardPage() {
               padding: '20px 24px',
               boxShadow: 'var(--shadow-sm)',
             }}>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={16} color="var(--color-text-muted)" /> Recent Activity
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={16} color="var(--color-text-muted)" /> Recent Activity
+                </h3>
+                <button
+                  onClick={() => navigate('/results-history')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-primary)',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '2px 6px',
+                  }}
+                >
+                  View All <ArrowRight size={13} />
+                </button>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {recentAttempts.map((attempt, idx) => (
                   <div key={idx} style={{
