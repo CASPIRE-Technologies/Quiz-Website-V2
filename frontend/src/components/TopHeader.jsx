@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, BookOpen, Award, User, LogOut, LogIn, ShieldCheck, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Search, BookOpen, Award, User, LogOut, LogIn, ShieldCheck, Menu, X, ChevronDown, BookMarked } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const NAV_HEIGHT = 64;
@@ -8,6 +8,7 @@ const NAV_HEIGHT = 64;
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: Home },
   { path: '/quizzes', label: 'Browse Quizzes', icon: Search },
+  { path: '/resources', label: 'Resources', icon: BookMarked },
   { path: '/my-quizzes', label: 'My Quizzes', icon: BookOpen },
   { path: '/results-history', label: 'My Performance', icon: Award },
   { path: '/profile', label: 'Student Profile', icon: User },
@@ -24,6 +25,9 @@ export default function TopHeader() {
 
   const isCurrent = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
+    if (path === '/resources') {
+      return location.pathname.startsWith('/resources') || location.pathname.startsWith('/education-resources');
+    }
     if (path === '/results-history') {
       return location.pathname.startsWith('/results') || location.pathname.startsWith('/my-performance');
     }

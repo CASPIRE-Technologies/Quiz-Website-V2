@@ -20,6 +20,7 @@ import ProfilePage from './pages/ProfilePage';
 import ResultsHistoryPage from './pages/ResultsHistoryPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminQuizWizardPage from './pages/AdminQuizWizardPage';
+import EducationResourcesPage from './pages/EducationResourcesPage';
 
 function RouteGuard({ children }) {
   const { user } = useAuth();
@@ -68,6 +69,8 @@ export default function App() {
               <Route path="/login" element={<AuthPage />} />
               <Route path="/select-exam-level" element={<SelectExamLevelPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/resources" element={<EducationResourcesPage />} />
+              <Route path="/education-resources" element={<EducationResourcesPage />} />
               <Route path="/exams/:levelId" element={<ExamsPage />} />
               <Route path="/quizzes" element={<QuizListPage />} />
               <Route path="/quiz/:quizId/details" element={<QuizDetailsPage />} />

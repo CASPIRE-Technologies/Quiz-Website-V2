@@ -29,6 +29,9 @@ export default function DesktopSidebar() {
         <Link to="/quizzes" className={`nav-item ${isCurrent('/quizzes') ? 'active' : ''}`}>
           <Search size={18} /> <span>Browse Quizzes</span>
         </Link>
+        <Link to="/resources" className={`nav-item ${isCurrent('/resources') ? 'active' : ''}`}>
+          <BookOpen size={18} /> <span>Education Resources</span>
+        </Link>
         <Link to="/my-quizzes" className={`nav-item ${isCurrent('/my-quizzes') ? 'active' : ''}`}>
           <BookOpen size={18} /> <span>My Quizzes</span>
         </Link>
