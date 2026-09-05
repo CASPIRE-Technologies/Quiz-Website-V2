@@ -180,6 +180,90 @@ function saveStoredQuizzes(quizzes) {
   localStorage.setItem('eduquiz_quizzes_v2', JSON.stringify(quizzes));
 }
 
+// Seed Fallback Questions for Question Bank
+const seedQuestions = [
+  {
+    id: "q-seed-01",
+    questionText: "What is the primary organelle responsible for aerobic cellular respiration in eukaryotic cells?",
+    isMultipleChoice: true,
+    hasImage: false,
+    imageUrl: null,
+    options: [
+      { letter: "A", text: "Mitochondria", isCorrect: true },
+      { letter: "B", text: "Ribosome", isCorrect: false },
+      { letter: "C", text: "Endoplasmic Reticulum", isCorrect: false },
+      { letter: "D", text: "Golgi Apparatus", isCorrect: false }
+    ],
+    correctOption: "Option A",
+    correctIndex: 0,
+    subject: "Science",
+    examLevel: "ol",
+    explanation: "Mitochondria produce ATP through cellular respiration.",
+    createdAt: "2026-09-01T10:00:00.000Z"
+  },
+  {
+    id: "q-seed-02",
+    questionText: "State Newton's Third Law of Motion and provide one real-life example of its application in rocketry.",
+    isMultipleChoice: false,
+    hasImage: false,
+    imageUrl: null,
+    options: [],
+    correctOption: null,
+    correctIndex: null,
+    subject: "Physics",
+    examLevel: "al",
+    explanation: "For every action, there is an equal and opposite reaction.",
+    createdAt: "2026-09-02T11:30:00.000Z"
+  },
+  {
+    id: "q-seed-03",
+    questionText: "Observe the biological plant cell diagram below and identify the green plastid responsible for photosynthesis.",
+    isMultipleChoice: true,
+    hasImage: true,
+    imageUrl: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=600&auto=format&fit=crop&q=80",
+    options: [
+      { letter: "A", text: "Chloroplast", isCorrect: true },
+      { letter: "B", text: "Vacuole", isCorrect: false },
+      { letter: "C", text: "Centriole", isCorrect: false },
+      { letter: "D", text: "Cell Wall", isCorrect: false }
+    ],
+    correctOption: "Option A",
+    correctIndex: 0,
+    subject: "Science",
+    examLevel: "ol",
+    explanation: "Chloroplasts contain chlorophyll which absorbs sunlight for photosynthesis.",
+    createdAt: "2026-09-03T14:15:00.000Z"
+  },
+  {
+    id: "q-seed-04",
+    questionText: "Study the historical map below. Describe the trade route highlighted across the Indian Ocean.",
+    isMultipleChoice: false,
+    hasImage: true,
+    imageUrl: "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&auto=format&fit=crop&q=80",
+    options: [],
+    correctOption: null,
+    correctIndex: null,
+    subject: "History",
+    examLevel: "ol",
+    explanation: "Descriptive question analyzing maritime spice trade routes.",
+    createdAt: "2026-09-04T09:45:00.000Z"
+  }
+];
+
+function getStoredQuestions() {
+  const local = localStorage.getItem('eduquiz_questions_bank_v2');
+  if (local) {
+    try { return JSON.parse(local); } catch (e) {}
+  }
+  localStorage.setItem('eduquiz_questions_bank_v2', JSON.stringify(seedQuestions));
+  return seedQuestions;
+}
+
+function saveStoredQuestions(questions) {
+  localStorage.setItem('eduquiz_questions_bank_v2', JSON.stringify(questions));
+}
+
+
 export const api = {
   async register(userData) {
     const res = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -423,5 +507,80 @@ export const api = {
   async updateQuizzesList(quizzes) {
     saveStoredQuizzes(quizzes);
     return { success: true };
+  },
+
+  async getQuestions() {
+    const local = getStoredQuestions();
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/questions`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+        saveStoredQuestions(data.questions);
+        return { success: true, questions: data.questions };
+      }
+    } catch (err) {}
+    return { success: true, questions: local };
+  },
+
+  async createQuestion(questionData) {
+    let apiMsg = '';
+    let savedQ = null;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/questions/create`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(questionData)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        apiMsg = data.message;
+        savedQ = data.question;
+      } else if (!res.ok) {
+        throw new Error(data.message || 'Failed to create question on server');
+      }
+    } catch (err) {
+      if (err.message && !err.message.includes('fetch')) {
+        throw err;
+      }
+    }
+
+    const fallbackId = `q-local-${Date.now()}`;
+    const questionToStore = savedQ || {
+      ...questionData,
+      id: fallbackId,
+      createdAt: new Date().toISOString()
+    };
+
+    const current = getStoredQuestions();
+    const updated = [questionToStore, ...current.filter(q => q.id !== questionToStore.id)];
+    saveStoredQuestions(updated);
+
+    return {
+      success: true,
+      message: apiMsg || 'Question saved successfully to question bank.',
+      question: questionToStore,
+      questions: updated
+    };
+  },
+
+  async deleteQuestion(id) {
+    try {
+      await fetch(`${API_BASE_URL}/admin/questions/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+    } catch (err) {}
+
+    const current = getStoredQuestions();
+    const updated = current.filter(q => q.id !== id);
+    saveStoredQuestions(updated);
+
+    return {
+      success: true,
+      message: 'Question deleted successfully.',
+      questions: updated
+    };
   }
 };
+

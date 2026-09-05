@@ -76,7 +76,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const registerAccount = async (newUserData) => {
-    const { user: newUser, token } = await api.register(newUserData);
+    const payload = {
+      examLevel: 'G.C.E. Ordinary Level (O/L)',
+      ...newUserData
+    };
+    const { user: newUser, token } = await api.register(payload);
     saveAuthSession(newUser, token);
     return newUser;
   };
@@ -142,6 +146,7 @@ export const AuthProvider = ({ children }) => {
     setPurchases([]);
     localStorage.removeItem('eduquiz_user');
     localStorage.removeItem('eduquiz_token');
+    sessionStorage.removeItem('eduquiz_new_registration');
   };
 
   const addPurchase = (quizId) => {

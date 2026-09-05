@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Quiz = require('../models/Quiz');
 
 function formatQuiz(quizDoc) {
@@ -20,7 +21,15 @@ function formatQuiz(quizDoc) {
       text: q.question_text || q.text || '',
       questionText: q.question_text || q.text || '',
       explanation: q.explanation || '',
+      isMultipleChoice: q.is_multiple_choice !== false,
+      hasImage: Boolean(q.has_image),
+      imageUrl: q.image_url || null,
       correctIndex: q.correct_index !== undefined ? q.correct_index : 0,
+      correctIndices: Array.isArray(q.correct_indices) && q.correct_indices.length > 0
+        ? q.correct_indices
+        : (q.correct_index !== undefined ? [q.correct_index] : [0]),
+      correctOption: q.correct_option || null,
+      correctOptions: q.correct_options || (q.correct_option ? [q.correct_option] : []),
       marks: q.marks || 1,
       options: (q.options || []).map((o, oIdx) => o.option_text || o.text || String(o))
     }))
@@ -43,7 +52,8 @@ exports.getAllQuizzes = async (req, res) => {
 exports.getQuizById = async (req, res) => {
   const { id } = req.params;
   try {
-    const quiz = await Quiz.findOne({ $or: [{ id }, { _id: id }] });
+    const query = mongoose.Types.ObjectId.isValid(id) ? { $or: [{ id }, { _id: id }] } : { id };
+    const quiz = await Quiz.findOne(query);
     if (!quiz) {
       return res.status(404).json({
         success: false,

@@ -21,6 +21,7 @@ import ResultsHistoryPage from './pages/ResultsHistoryPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminQuizWizardPage from './pages/AdminQuizWizardPage';
 import EducationResourcesPage from './pages/EducationResourcesPage';
+import WelcomePage from './pages/WelcomePage';
 
 function RouteGuard({ children }) {
   const { user } = useAuth();
@@ -34,7 +35,7 @@ function RouteGuard({ children }) {
   }
 
   // If student is logged in but hasn't picked examination level yet, force redirect to onboarding page
-  if (user && user.role !== 'admin' && !user.examLevel && location.pathname !== '/select-exam-level' && location.pathname !== '/login' && !location.pathname.startsWith('/admin')) {
+  if (user && user.role !== 'admin' && !user.examLevel && location.pathname !== '/welcome' && location.pathname !== '/select-exam-level' && location.pathname !== '/login' && !location.pathname.startsWith('/admin')) {
     return <Navigate to="/select-exam-level" replace />;
   }
 
@@ -43,8 +44,8 @@ function RouteGuard({ children }) {
 
 function LayoutShell({ children }) {
   const location = useLocation();
-  // Exclude Login, Select Exam Level, Quiz Taking Attempt, AND Admin routes from Student Layout
-  const isStandalonePage = location.pathname === '/login' || location.pathname === '/select-exam-level' || location.pathname.includes('/attempt') || location.pathname.startsWith('/admin');
+  // Exclude Login, Welcome, Select Exam Level, Quiz Taking Attempt, AND Admin routes from Student Layout
+  const isStandalonePage = location.pathname === '/login' || location.pathname === '/welcome' || location.pathname === '/select-exam-level' || location.pathname.includes('/attempt') || location.pathname.startsWith('/admin');
 
   if (isStandalonePage) {
     return <main>{children}</main>;
@@ -67,6 +68,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/login" element={<AuthPage />} />
+              <Route path="/welcome" element={<WelcomePage />} />
               <Route path="/select-exam-level" element={<SelectExamLevelPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/resources" element={<EducationResourcesPage />} />

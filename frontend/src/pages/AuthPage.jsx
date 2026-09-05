@@ -38,9 +38,11 @@ export default function AuthPage() {
 
       setTimeout(() => {
         setIsSplashing(false);
-        if (!nextUser?.examLevel) {
-          navigate('/select-exam-level');
+        if (isSignUp) {
+          sessionStorage.setItem('eduquiz_new_registration', 'true');
+          navigate('/welcome');
         } else {
+          sessionStorage.removeItem('eduquiz_new_registration');
           navigate('/dashboard');
         }
       }, 1200);
@@ -86,9 +88,11 @@ export default function AuthPage() {
 
           setTimeout(() => {
             setIsSplashing(false);
-            if (!nextUser?.examLevel) {
-              navigate('/select-exam-level');
+            if (isSignUp) {
+              sessionStorage.setItem('eduquiz_new_registration', 'true');
+              navigate('/welcome');
             } else {
+              sessionStorage.removeItem('eduquiz_new_registration');
               navigate('/dashboard');
             }
           }, 1200);
@@ -155,17 +159,18 @@ export default function AuthPage() {
             name: name.trim() || 'New Student',
             email: trimmedEmail,
             password: trimmedPass,
-            school: school.trim() || 'Sri Lankan School'
+            school: school.trim() || 'Sri Lankan School',
+            examLevel: 'G.C.E. Ordinary Level (O/L)'
           });
-          nextRoute = '/select-exam-level';
+          sessionStorage.setItem('eduquiz_new_registration', 'true');
+          nextRoute = '/welcome';
         } else {
           nextUser = await loginUser({
             email: trimmedEmail,
             password: trimmedPass
           });
-          if (!nextUser?.examLevel) {
-            nextRoute = '/select-exam-level';
-          }
+          sessionStorage.removeItem('eduquiz_new_registration');
+          nextRoute = '/dashboard';
         }
 
         if (nextUser) {
