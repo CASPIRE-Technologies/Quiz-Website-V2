@@ -115,6 +115,27 @@ export const AuthProvider = ({ children }) => {
     return updatedUser;
   };
 
+  const updateUserProfile = async (updatedFields) => {
+    if (!user) return null;
+    const mergedUser = { ...user, ...updatedFields };
+    setUser(mergedUser);
+    localStorage.setItem('eduquiz_user', JSON.stringify(mergedUser));
+
+    const db = getStoredUserDatabase();
+    const updatedDb = db.map(u => u.email === user.email ? { ...u, ...updatedFields } : u);
+    setUsersDb(updatedDb);
+    localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
+
+    const res = await api.updateProfile(updatedFields);
+    if (res && res.success && res.user) {
+      const finalUser = { ...mergedUser, ...res.user };
+      setUser(finalUser);
+      localStorage.setItem('eduquiz_user', JSON.stringify(finalUser));
+      return finalUser;
+    }
+    return mergedUser;
+  };
+
   const logoutUser = () => {
     setUser(null);
     setAttempts({});
@@ -144,7 +165,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, usersDb, registerAccount, loginUser, googleLoginUser, updateUserExamLevel, logoutUser, purchases, addPurchase, attempts, addAttempt }}>
+    <AuthContext.Provider value={{ user, usersDb, registerAccount, loginUser, googleLoginUser, updateUserExamLevel, updateUserProfile, logoutUser, purchases, addPurchase, attempts, addAttempt }}>
       {children}
     </AuthContext.Provider>
   );

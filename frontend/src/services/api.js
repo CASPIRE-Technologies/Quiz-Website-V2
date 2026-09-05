@@ -16,7 +16,7 @@ function getAuthHeaders() {
 const seedQuizzes = [
   {
     id: "quiz-math-01",
-    title: "Algebra & Quadratic Equations Paper 01",
+    title: "O/L Algebra & Quadratic Equations Paper 01",
     examLevel: "ol",
     subjectId: "math",
     subjectName: "Mathematics",
@@ -49,8 +49,35 @@ const seedQuizzes = [
     ]
   },
   {
+    id: "quiz-ol-science-01",
+    title: "O/L Science & Technology Model Paper 01",
+    examLevel: "ol",
+    subjectId: "science",
+    subjectName: "Science",
+    questionCount: 25,
+    durationMinutes: 40,
+    difficulty: "Medium",
+    price: 350,
+    currency: "LKR",
+    attemptsAllowed: 1,
+    rating: 4.7,
+    reviewsCount: 84,
+    about: "Comprehensive Ordinary Level science practice covering cell biology, plant physiology, chemical reactions, and electric circuits.",
+    topics: ["Plant Biology", "Chemical Reactions", "Electric Currents", "Acids & Bases"],
+    is_published: true,
+    questions: [
+      {
+        id: 1,
+        text: "Which organelle is considered the powerhouse of the cell?",
+        options: ["Mitochondria", "Nucleus", "Ribosome", "Endoplasmic Reticulum"],
+        correctIndex: 0,
+        explanation: "Mitochondria generate most of the chemical energy needed by the cell (ATP)."
+      }
+    ]
+  },
+  {
     id: "quiz-physics-01",
-    title: "Mechanics & Gravitational Fields Test",
+    title: "A/L Physics Mechanics & Gravitational Fields Test",
     examLevel: "al",
     streamId: "physical",
     subjectId: "physics",
@@ -80,6 +107,61 @@ const seedQuizzes = [
         options: ["J/kg", "N/kg", "J·m", "W/kg"],
         correctIndex: 0,
         explanation: "Gravitational potential is defined as work done per unit mass (Joules per kilogram, J/kg)."
+      }
+    ]
+  },
+  {
+    id: "quiz-al-chem-01",
+    title: "A/L Chemistry Atomic Structure & Bonding Test",
+    examLevel: "al",
+    streamId: "bio",
+    subjectId: "chemistry",
+    subjectName: "Chemistry",
+    questionCount: 30,
+    durationMinutes: 50,
+    difficulty: "Hard",
+    price: 400,
+    currency: "LKR",
+    attemptsAllowed: 1,
+    rating: 4.8,
+    reviewsCount: 76,
+    about: "Advanced Level Chemistry unit test covering Quantum numbers, Periodic trends, Lewis structures, and Hybridization.",
+    topics: ["Atomic Structure", "Periodic Trends", "Covalent Bonding", "Hybridization"],
+    is_published: true,
+    questions: [
+      {
+        id: 1,
+        text: "What is the shape of the methane (CH₄) molecule?",
+        options: ["Tetrahedral", "Linear", "Trigonal Planar", "Bent"],
+        correctIndex: 0,
+        explanation: "Methane has 4 bonding pairs and 0 lone pairs around carbon, resulting in a tetrahedral geometry (sp³)."
+      }
+    ]
+  },
+  {
+    id: "quiz-scholar-01",
+    title: "Grade 5 Scholarship Logic & Visual Reasoning Paper 01",
+    examLevel: "scholarship",
+    subjectId: "scholarship",
+    subjectName: "Scholarship & IQ",
+    questionCount: 20,
+    durationMinutes: 30,
+    difficulty: "Easy",
+    price: 250,
+    currency: "LKR",
+    attemptsAllowed: 2,
+    rating: 4.9,
+    reviewsCount: 165,
+    about: "Special primary scholarship practice paper with visual pattern deduction, clock angle logic, word series, and basic math puzzles.",
+    topics: ["Pattern Matching", "Number Sequences", "Visual Deduction", "Time Logic"],
+    is_published: true,
+    questions: [
+      {
+        id: 1,
+        text: "What comes next in the sequence: 3, 6, 12, 24, ___?",
+        options: ["48", "36", "30", "42"],
+        correctIndex: 0,
+        explanation: "Each number is multiplied by 2: 24 × 2 = 48."
       }
     ]
   }
@@ -149,6 +231,29 @@ export const api = {
       return data;
     } catch (err) {
       return { success: true, message: 'Saved locally' };
+    }
+  },
+
+  async getProfile() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok && data.success) return data;
+    } catch (err) {}
+    return { success: false };
+  },
+
+  async updateProfile(profileData) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(profileData)
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to update profile on server' };
     }
   },
 

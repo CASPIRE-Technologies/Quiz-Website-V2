@@ -351,3 +351,45 @@ exports.updateExamLevel = async (req, res) => {
     });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  const email = String(req.user?.email || req.body.email || '').toLowerCase().trim();
+  const { name, phone, school, examLevel, avatarUrl } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email is required to identify student account.'
+    });
+  }
+
+  try {
+    const updateData = {};
+    if (name !== undefined && name !== '') updateData.name = String(name).trim();
+    if (phone !== undefined) updateData.phone = String(phone).trim();
+    if (school !== undefined) updateData.school = String(school).trim();
+    if (examLevel !== undefined && examLevel !== '') updateData.exam_level = String(examLevel).trim();
+    if (avatarUrl !== undefined) updateData.avatar_url = avatarUrl;
+
+    const user = await User.findOneAndUpdate({ email }, updateData, { new: true });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student account not found in database.'
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Student profile updated successfully!',
+      user: formatUser(user)
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update profile.',
+      error: err.message
+    });
+  }
+};
+

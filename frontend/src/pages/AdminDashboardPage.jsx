@@ -1,8 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut, BarChart3, CreditCard, Menu, X, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+/* ── inline style objects (kept out of JSX for readability) ── */
+
+const NAV_HEIGHT = 64;
+
+const navbarStyle = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: `${NAV_HEIGHT}px`,
+  background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '0 28px',
+  zIndex: 200,
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+};
+
+const navLinkBase = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '7px',
+  padding: '8px 16px',
+  borderRadius: '8px',
+  fontSize: '13px',
+  fontWeight: 600,
+  color: 'rgba(255,255,255,0.6)',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  border: 'none',
+  background: 'transparent',
+  position: 'relative',
+  whiteSpace: 'nowrap',
+  fontFamily: 'inherit',
+};
+
+const navLinkActive = {
+  ...navLinkBase,
+  color: '#FFFFFF',
+  backgroundColor: 'rgba(37, 99, 235, 0.25)',
+};
+
+const navLinkHoverBg = 'rgba(255,255,255,0.08)';
+
+const mobileDrawerOverlay = {
+  position: 'fixed',
+  inset: 0,
+  backgroundColor: 'rgba(15, 23, 42, 0.7)',
+  backdropFilter: 'blur(4px)',
+  zIndex: 300,
+  display: 'flex',
+};
+
+const mobileDrawerPanel = {
+  width: '300px',
+  maxWidth: '85vw',
+  height: '100%',
+  background: 'linear-gradient(180deg, #0F172A 0%, #1E293B 100%)',
+  padding: '24px 20px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+  overflowY: 'auto',
+  boxShadow: '8px 0 32px rgba(0,0,0,0.4)',
+};
+
+const mobileNavItem = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '12px 16px',
+  borderRadius: '10px',
+  fontSize: '14px',
+  fontWeight: 600,
+  color: 'rgba(255,255,255,0.65)',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  border: 'none',
+  background: 'transparent',
+  width: '100%',
+  textAlign: 'left',
+  fontFamily: 'inherit',
+};
+
+const mobileNavItemActive = {
+  ...mobileNavItem,
+  color: '#FFFFFF',
+  backgroundColor: 'rgba(37, 99, 235, 0.3)',
+};
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -17,6 +109,8 @@ export default function AdminDashboardPage() {
   const [quizzesList, setQuizzesList] = useState([]);
   const [quizSearch, setQuizSearch] = useState('');
   const [quizFilterStatus, setQuizFilterStatus] = useState('all');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [hoveredTab, setHoveredTab] = useState(null);
 
   const [dbUsers, setDbUsers] = useState([]);
 
@@ -84,6 +178,14 @@ export default function AdminDashboardPage() {
     logoutUser();
     navigate('/login');
   };
+
+  // Tab definitions with icons and counts
+  const navTabs = [
+    { key: 'quizzes', label: 'Quiz Management', icon: BookOpen, count: quizzesList?.length || 0 },
+    { key: 'students', label: 'Students', icon: Users, count: displayStudentsList?.length || 0 },
+    { key: 'payments', label: 'Payments', icon: CreditCard, count: paymentsList?.length || 0 },
+    { key: 'analytics', label: 'Analytics', icon: BarChart3, count: null },
+  ];
 
   // IF NOT LOGGED IN AS ADMIN, SHOW STANDALONE ADMIN LOGIN WINDOW GATE
   if (user?.role !== 'admin') {
@@ -167,40 +269,226 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const currentTabLabel = navTabs.find(t => t.key === activeTab)?.label || 'Dashboard';
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)', paddingBottom: '40px' }}>
-      <header style={{ backgroundColor: '#0F172A', color: 'white', padding: '0 32px', height: '68px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}>EQ</div>
-          <div>
-            <span style={{ fontWeight: 800, fontSize: '18px' }}>EduQuiz Pro</span>
-            <span style={{ marginLeft: '10px', fontSize: '12px', backgroundColor: 'rgba(37, 99, 235, 0.25)', color: '#60A5FA', padding: '3px 8px', borderRadius: '9999px', fontWeight: 700, border: '1px solid rgba(96, 165, 250, 0.3)' }}>
-              SYSTEM ADMIN CONSOLE
-            </span>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+
+      {/* ═══════════════════════════════════════════════════════════
+          FIXED TOP NAVIGATION BAR
+          ═══════════════════════════════════════════════════════════ */}
+      <nav style={navbarStyle}>
+
+        {/* ── Left: Logo + Brand ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.08)', color: 'white', cursor: 'pointer', flexShrink: 0 }}
+            className="admin-nav-hamburger"
+          >
+            <Menu size={20} />
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/admin')}>
+            <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', width: '36px', height: '36px', fontSize: '15px', borderRadius: '10px', flexShrink: 0 }}>EQ</div>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+              <span style={{ fontWeight: 800, fontSize: '16px', color: 'white', letterSpacing: '-0.3px' }}>EduQuiz Pro</span>
+              <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Admin Console</span>
+            </div>
+          </div>
+
+          {/* Vertical divider */}
+          <div style={{ width: '1px', height: '28px', backgroundColor: 'rgba(255,255,255,0.12)', margin: '0 4px' }} className="admin-nav-divider" />
+
+          {/* ── Center: Nav Tabs (desktop) ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} className="admin-nav-tabs-desktop">
+            {navTabs.map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = activeTab === tab.key;
+              const isHovered = hoveredTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  onMouseEnter={() => setHoveredTab(tab.key)}
+                  onMouseLeave={() => setHoveredTab(null)}
+                  style={{
+                    ...(isActive ? navLinkActive : navLinkBase),
+                    backgroundColor: isActive ? 'rgba(37, 99, 235, 0.25)' : (isHovered ? navLinkHoverBg : 'transparent'),
+                  }}
+                >
+                  <TabIcon size={15} />
+                  <span>{tab.label}</span>
+                  {tab.count !== null && (
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      backgroundColor: isActive ? 'rgba(96, 165, 250, 0.3)' : 'rgba(255,255,255,0.1)',
+                      color: isActive ? '#93C5FD' : 'rgba(255,255,255,0.5)',
+                      padding: '1px 7px',
+                      borderRadius: '9999px',
+                      lineHeight: '18px',
+                      transition: 'all 0.2s ease',
+                    }}>
+                      {tab.count}
+                    </span>
+                  )}
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <span style={{
+                      position: 'absolute',
+                      bottom: '-4px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '24px',
+                      height: '3px',
+                      borderRadius: '3px',
+                      background: 'linear-gradient(90deg, #3B82F6, #8B5CF6)',
+                    }} />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ fontSize: '13px', opacity: 0.9 }}>
-            Logged in as: <strong style={{ color: '#60A5FA' }}>admin@eduquiz.lk</strong>
+        {/* ── Right: Admin info + Actions ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            className="btn btn-primary btn-sm"
+            style={{ fontSize: '12px', padding: '7px 14px', borderRadius: '8px', fontWeight: 700 }}
+            onClick={() => navigate('/admin/create-quiz')}
+          >
+            <Plus size={14} /> New Quiz
+          </button>
+
+          {/* Admin avatar + name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '5px 12px 5px 5px', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.12)', cursor: 'default' }} className="admin-nav-user-pill">
+            <div style={{
+              width: '30px', height: '30px', borderRadius: '50%',
+              background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontWeight: 700, fontSize: '13px', flexShrink: 0,
+            }}>A</div>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>admin@eduquiz.lk</span>
           </div>
-          <button className="btn btn-outline" style={{ color: 'white', borderColor: 'rgba(255, 255, 255, 0.2)' }} onClick={handleAdminLogout}>
-            <LogOut size={16} /> Exit Admin Window
+
+          <button
+            onClick={handleAdminLogout}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '7px 14px', borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'transparent', color: 'rgba(255,255,255,0.65)',
+              fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+              transition: 'all 0.2s ease', fontFamily: 'inherit',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'; e.currentTarget.style.color = '#FCA5A5'; e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+          >
+            <LogOut size={14} /> Exit
           </button>
         </div>
-      </header>
+      </nav>
 
-      <main style={{ maxWidth: '1400px', margin: '32px auto 0 auto', padding: '0 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
-          <div>
-            <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text-main)' }}>Admin Management Portal</h1>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Connected to Express REST Backend & MongoDB Atlas Database (edu_pulse_lk_db)</p>
+      {/* ═══════════════════════════════════════════════════════════
+          MOBILE NAV DRAWER (slides in from left)
+          ═══════════════════════════════════════════════════════════ */}
+      {mobileNavOpen && (
+        <div style={mobileDrawerOverlay} onClick={() => setMobileNavOpen(false)}>
+          <div style={mobileDrawerPanel} onClick={(e) => e.stopPropagation()}>
+            {/* Drawer header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', width: '34px', height: '34px', fontSize: '14px' }}>EQ</div>
+                <span style={{ fontWeight: 800, fontSize: '15px', color: 'white' }}>Admin Console</span>
+              </div>
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                style={{ width: '34px', height: '34px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: 'none', color: 'white', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Nav items */}
+            {navTabs.map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => { setActiveTab(tab.key); setMobileNavOpen(false); }}
+                  style={isActive ? mobileNavItemActive : mobileNavItem}
+                >
+                  <TabIcon size={18} />
+                  <span style={{ flex: 1 }}>{tab.label}</span>
+                  {tab.count !== null && (
+                    <span style={{
+                      fontSize: '11px', fontWeight: 700,
+                      backgroundColor: isActive ? 'rgba(96, 165, 250, 0.3)' : 'rgba(255,255,255,0.1)',
+                      color: isActive ? '#93C5FD' : 'rgba(255,255,255,0.4)',
+                      padding: '2px 8px', borderRadius: '9999px',
+                    }}>{tab.count}</span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Drawer footer actions */}
+            <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <button
+                onClick={() => { setMobileNavOpen(false); navigate('/admin/create-quiz'); }}
+                style={{ ...mobileNavItem, color: '#60A5FA' }}
+              >
+                <Plus size={18} />
+                <span>Create New Quiz</span>
+              </button>
+              <button
+                onClick={() => { setMobileNavOpen(false); handleAdminLogout(); }}
+                style={{ ...mobileNavItem, color: '#FCA5A5' }}
+              >
+                <LogOut size={18} />
+                <span>Exit Admin</span>
+              </button>
+            </div>
           </div>
-          <button className="btn btn-primary btn-lg" onClick={() => navigate('/admin/create-quiz')}>
-            <Plus size={18} /> Create New Quiz Paper
-          </button>
         </div>
+      )}
 
+      {/* ═══════════════════════════════════════════════════════════
+          SUB-HEADER BREADCRUMB BAR
+          ═══════════════════════════════════════════════════════════ */}
+      <div style={{
+        marginTop: `${NAV_HEIGHT}px`,
+        backgroundColor: 'var(--color-card-bg)',
+        borderBottom: '1px solid var(--color-border)',
+        padding: '0 28px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '52px',
+        flexWrap: 'wrap',
+        gap: '8px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
+          <span style={{ fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveTab('quizzes')}>Admin</span>
+          <ChevronRight size={14} />
+          <span style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{currentTabLabel}</span>
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-success)', display: 'inline-block' }} />
+          Connected to MongoDB &middot; edu_pulse_lk_db
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════
+          MAIN CONTENT
+          ═══════════════════════════════════════════════════════════ */}
+      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '28px 24px 48px 24px' }}>
+
+        {/* Stat Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
           <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -243,21 +531,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
-          <button className={`chip ${activeTab === 'quizzes' ? 'active' : ''}`} onClick={() => setActiveTab('quizzes')}>
-            Quiz Management ({quizzesList?.length || 0})
-          </button>
-          <button className={`chip ${activeTab === 'students' ? 'active' : ''}`} onClick={() => setActiveTab('students')}>
-            Student Management ({displayStudentsList?.length || 0})
-          </button>
-          <button className={`chip ${activeTab === 'payments' ? 'active' : ''}`} onClick={() => setActiveTab('payments')}>
-            Payment Dashboard ({paymentsList?.length || 0})
-          </button>
-          <button className={`chip ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-            Overview & Analytics
-          </button>
-        </div>
-
+        {/* ── Tab Content Panels ── */}
         {activeTab === 'quizzes' && (
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
@@ -418,6 +692,39 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </main>
+
+      {/* ═══════════════════════════════════════════════════════════
+          RESPONSIVE CSS (injected via style tag)
+          ═══════════════════════════════════════════════════════════ */}
+      <style>{`
+        /* Always show admin tabs — scrollable on all sizes */
+        .admin-nav-hamburger { display: none !important; }
+        .admin-nav-tabs-desktop {
+          display: flex !important;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .admin-nav-tabs-desktop::-webkit-scrollbar {
+          display: none;
+        }
+        .admin-nav-divider { display: block !important; }
+        .admin-nav-user-pill { display: flex !important; }
+
+        /* Tablet / small desktop */
+        @media (max-width: 1100px) {
+          .admin-nav-user-pill { display: none !important; }
+        }
+
+        /* Smaller screens: shrink tab padding */
+        @media (max-width: 860px) {
+          .admin-nav-divider { display: none !important; }
+          .admin-nav-tabs-desktop button {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

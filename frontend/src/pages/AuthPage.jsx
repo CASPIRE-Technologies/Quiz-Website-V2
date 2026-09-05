@@ -431,9 +431,16 @@ export default function AuthPage() {
           <div className="overlay">
             
             <div className="overlay-panel overlay-left">
-              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Welcome Back!</h2>
-              <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
+              <div className="overlay-illustration-box">
+                <img 
+                  src="/auth-bg-transparent.png" 
+                  alt="EduQuiz Graduation Illustration" 
+                  className="overlay-illustration-img" 
+                />
+              </div>
+              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 10px auto' }}>EQ</div>
+              <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>Welcome Back!</h2>
+              <p style={{ fontSize: '14px', opacity: 0.9, lineHeight: 1.5, maxWidth: '300px' }}>
                 To keep connected with your quiz learning progress, please login with your personal info
               </p>
               <button className="ghost-btn" onClick={() => setIsSignUp(false)}>
@@ -442,9 +449,16 @@ export default function AuthPage() {
             </div>
 
             <div className="overlay-panel overlay-right">
-              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 16px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>Create Real Account</h2>
-              <p style={{ fontSize: '15px', opacity: 0.9, lineHeight: 1.6, maxWidth: '320px' }}>
+              <div className="overlay-illustration-box">
+                <img 
+                  src="/auth-bg-transparent.png" 
+                  alt="EduQuiz Graduation Illustration" 
+                  className="overlay-illustration-img" 
+                />
+              </div>
+              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 10px auto' }}>EQ</div>
+              <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>Create Real Account</h2>
+              <p style={{ fontSize: '14px', opacity: 0.9, lineHeight: 1.5, maxWidth: '300px' }}>
                 Register your own personal account to begin timed quizzes and save your results to EduQuiz Database
               </p>
               <button className="ghost-btn" onClick={() => setIsSignUp(true)}>
