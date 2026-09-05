@@ -15,7 +15,7 @@ export default function MobileBottomNav() {
       <Link to="/my-quizzes" className={`mobile-nav-item ${isCurrent('/my-quizzes') ? 'active' : ''}`}>
         <BookOpen size={20} /> <span>My Quizzes</span>
       </Link>
-      <Link to="/results-history" className={`mobile-nav-item ${isCurrent('/results-history') ? 'active' : ''}`}>
+      <Link to="/results-history" className={`mobile-nav-item ${location.pathname.startsWith('/results') || location.pathname.startsWith('/my-performance') ? 'active' : ''}`}>
         <Award size={20} /> <span>Results</span>
       </Link>
       <Link to="/profile" className={`mobile-nav-item ${isCurrent('/profile') ? 'active' : ''}`}>

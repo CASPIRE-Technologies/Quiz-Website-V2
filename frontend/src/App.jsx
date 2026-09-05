@@ -2,9 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-import DesktopSidebar from './components/DesktopSidebar';
 import TopHeader from './components/TopHeader';
-import MobileBottomNav from './components/MobileBottomNav';
 
 import AuthPage from './pages/AuthPage';
 import SelectExamLevelPage from './pages/SelectExamLevelPage';
@@ -22,6 +20,7 @@ import ProfilePage from './pages/ProfilePage';
 import ResultsHistoryPage from './pages/ResultsHistoryPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminQuizWizardPage from './pages/AdminQuizWizardPage';
+import EducationResourcesPage from './pages/EducationResourcesPage';
 
 function RouteGuard({ children }) {
   const { user } = useAuth();
@@ -52,14 +51,10 @@ function LayoutShell({ children }) {
   }
 
   return (
-    <div className="app-container">
-      <DesktopSidebar />
-      <div className="main-wrapper">
-        <TopHeader />
-        <main className="page-stage">{children}</main>
-      </div>
-      <MobileBottomNav />
-    </div>
+    <>
+      <TopHeader />
+      <main className="page-stage" style={{ paddingTop: 'calc(64px + 28px)' }}>{children}</main>
+    </>
   );
 }
 
@@ -74,6 +69,8 @@ export default function App() {
               <Route path="/login" element={<AuthPage />} />
               <Route path="/select-exam-level" element={<SelectExamLevelPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/resources" element={<EducationResourcesPage />} />
+              <Route path="/education-resources" element={<EducationResourcesPage />} />
               <Route path="/exams/:levelId" element={<ExamsPage />} />
               <Route path="/quizzes" element={<QuizListPage />} />
               <Route path="/quiz/:quizId/details" element={<QuizDetailsPage />} />
@@ -85,6 +82,8 @@ export default function App() {
               <Route path="/quiz/:quizId/review" element={<AnswerReviewPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/results-history" element={<ResultsHistoryPage />} />
+              <Route path="/results" element={<ResultsHistoryPage />} />
+              <Route path="/my-performance" element={<ResultsHistoryPage />} />
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/admin/create-quiz" element={<AdminQuizWizardPage />} />
               <Route path="/admin/edit-quiz/:quizId" element={<AdminQuizWizardPage />} />
@@ -95,3 +94,4 @@ export default function App() {
     </AuthProvider>
   );
 }
+

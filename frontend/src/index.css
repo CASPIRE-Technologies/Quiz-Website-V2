@@ -58,45 +58,19 @@ body {
   min-height: 100vh;
 }
 
-/* App Container Layout */
+/* App Container Layout (top-nav-only) */
 .app-container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   width: 100%;
 }
 
-.desktop-sidebar {
-  width: var(--sidebar-width);
-  background-color: var(--color-card-bg);
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 40;
-}
-
 .main-wrapper {
   flex: 1;
-  margin-left: var(--sidebar-width);
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-
-.top-header {
-  height: var(--header-height);
-  background-color: var(--color-card-bg);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 30;
 }
 
 .page-stage {
@@ -105,20 +79,6 @@ body {
   max-width: var(--max-content-width);
   width: 100%;
   margin: 0 auto;
-}
-
-.mobile-bottom-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--bottom-nav-height);
-  background-color: var(--color-card-bg);
-  border-top: 1px solid var(--color-border);
-  z-index: 40;
-  justify-content: space-around;
-  align-items: center;
 }
 
 /* Common UI Components */
@@ -425,7 +385,10 @@ body {
 }
 
 .overlay {
-  background: linear-gradient(135deg, #1E40AF 0%, #2563EB 50%, #7C3AED 100%);
+  background: 
+    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 15% 80%, rgba(14, 165, 233, 0.25) 0%, transparent 50%),
+    linear-gradient(135deg, #1E40AF 0%, #2563EB 50%, #7C3AED 100%);
   background-repeat: no-repeat;
   background-size: cover;
   color: #FFFFFF;
@@ -435,6 +398,18 @@ body {
   width: 200%;
   transform: translateX(0);
   transition: transform 0.6s ease-in-out;
+}
+
+.overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/auth-bg-transparent.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 400px;
+  opacity: 0.08;
+  pointer-events: none;
 }
 
 .solve-auth-card.right-panel-active .overlay {
@@ -447,13 +422,56 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  padding: 0 48px;
+  padding: 0 40px;
   text-align: center;
   top: 0;
   height: 100%;
   width: 50%;
   transform: translateX(0);
   transition: transform 0.6s ease-in-out;
+  z-index: 2;
+}
+
+.overlay-illustration-box {
+  width: 175px;
+  height: 175px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.overlay-illustration-box::after {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, rgba(251, 191, 36, 0.18) 45%, transparent 70%);
+  border-radius: 50%;
+  z-index: 1;
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.overlay-illustration-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 24px rgba(15, 23, 42, 0.4));
+  animation: floatIllustration 4s ease-in-out infinite;
+  transition: transform 0.3s ease;
+  z-index: 2;
+  position: relative;
+}
+
+@keyframes floatIllustration {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.02);
+  }
 }
 
 .overlay-left {
@@ -522,11 +540,7 @@ body {
 
 /* Responsive Rules for Mobile */
 @media (max-width: 1023px) {
-  .desktop-sidebar { display: none; }
-  .main-wrapper { margin-left: 0; }
-  .mobile-bottom-nav { display: flex; }
-  .page-stage { padding: 20px 16px calc(var(--bottom-nav-height) + 20px) 16px; }
-  .header-search-wrap { display: none !important; }
+  .page-stage { padding: 20px 16px; }
 
   .solve-auth-card { min-height: auto; }
   .overlay-container { display: none; }
@@ -534,4 +548,19 @@ body {
   .sign-up-container { display: none; }
   .solve-auth-card.right-panel-active .sign-up-container { display: flex; }
   .solve-auth-card.right-panel-active .sign-in-container { display: none; }
+}
+
+/* ══════════════════════════════════════
+   DASHBOARD RESPONSIVE OVERRIDES
+   ══════════════════════════════════════ */
+@media (max-width: 900px) {
+  .page-stage > div > div[style*="1.6fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-stage > div > div[style*="minmax(200px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
