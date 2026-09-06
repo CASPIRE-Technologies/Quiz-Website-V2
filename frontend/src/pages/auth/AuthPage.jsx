@@ -1,25 +1,27 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { CheckCircle2, UserPlus, LogIn, XCircle, Sun, Moon, Globe } from 'lucide-react';
+
+import './auth.css';
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const { loginUser, registerAccount, googleLoginUser } = useAuth();
   const { theme, isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
-  
+
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [school, setSchool] = useState('');
-  
+
   const [isSplashing, setIsSplashing] = useState(false);
   const [authPanelStatus, setAuthPanelStatus] = useState('success');
   const [activeAccountName, setActiveAccountName] = useState('');
@@ -33,7 +35,6 @@ export default function AuthPage() {
         setAuthPanelStatus('success');
         setAuthError('');
 
-        // Fetch user profile from Google using the access_token
         const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
         });
@@ -183,7 +184,7 @@ export default function AuthPage() {
           <span className="lang-badge">{language === 'si' ? 'සිං' : 'EN'}</span>
         </button>
       </div>
-      
+
       {/* Splash Screen Overlay */}
       {isSplashing && (
         <div style={{
@@ -223,7 +224,7 @@ export default function AuthPage() {
             }}>
               {authPanelStatus === 'success' ? <CheckCircle2 size={36} /> : <XCircle size={36} />}
             </div>
-            
+
             <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '8px' }}>
               {authPanelStatus === 'success'
                 ? (language === 'si' ? 'පිවිසුම සාර්ථකයි!' : 'Authentication Successful!')
@@ -242,7 +243,7 @@ export default function AuthPage() {
 
       {/* Auth Card Container */}
       <div className={`solve-auth-card ${isSignUp ? 'right-panel-active' : ''}`}>
-        
+
         {/* SIGN UP FORM */}
         <div className="form-container sign-up-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
@@ -333,6 +334,15 @@ export default function AuthPage() {
             <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '10px' }}>
               <UserPlus size={16} /> {t('auth.registerBtn')}
             </button>
+
+            {/* Mobile-only toggle — the illustrated overlay's switch button is hidden on
+               narrow screens, so this is how mobile users get back to Sign In */}
+            <p className="mobile-toggle">
+              {language === 'si' ? 'දැනටමත් ගිණුමක් තිබේද?' : 'Already have an account?'}{' '}
+              <button type="button" onClick={() => setIsSignUp(false)}>
+                {t('nav.signIn')}
+              </button>
+            </p>
           </form>
         </div>
 
@@ -414,10 +424,18 @@ export default function AuthPage() {
             <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '10px' }}>
               <LogIn size={16} /> {t('auth.signInBtn')}
             </button>
+
+            {/* Mobile-only toggle */}
+            <p className="mobile-toggle">
+              {language === 'si' ? 'ගිණුමක් නැද්ද?' : "Don't have an account?"}{' '}
+              <button type="button" onClick={() => setIsSignUp(true)}>
+                {t('auth.registerBtn')}
+              </button>
+            </p>
           </form>
         </div>
 
-        {/* OVERLAY PANEL */}
+        {/* OVERLAY PANEL — hidden on mobile, see auth.css */}
         <div className="overlay-container">
           <div className="overlay">
             <div className="overlay-panel overlay-left">

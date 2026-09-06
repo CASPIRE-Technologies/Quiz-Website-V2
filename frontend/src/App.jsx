@@ -12,7 +12,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 
 import TopHeader from "./components/TopHeader";
 
-import AuthPage from "./pages/AuthPage";
+import AuthPage from "./pages/auth/AuthPage";
 import SelectExamLevelPage from "./pages/SelectExamLevelPage";
 import DashboardPage from "./pages/DashboardPage";
 import ExamsPage from "./pages/ExamsPage";
