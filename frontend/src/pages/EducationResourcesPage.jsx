@@ -12,10 +12,12 @@ import {
   SUBJECTS_DATA,
   BOOKS_DATA
 } from '../data/educationResourcesData';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function EducationResourcesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t, language } = useLanguage();
 
   // Navigation state driven by URL or local state
   const [selectedLevel, setSelectedLevel] = useState(searchParams.get('level') || null); // 'ol' | 'al' | null
@@ -216,7 +218,7 @@ export default function EducationResourcesPage() {
             marginBottom: '14px',
             color: '#93C5FD',
           }}>
-            <BookMarked size={16} /> National Curriculum & Syllabus Hub
+            <BookMarked size={16} /> {t('resources.badge')}
           </div>
 
           <h1 style={{
@@ -226,7 +228,7 @@ export default function EducationResourcesPage() {
             marginBottom: '10px',
             letterSpacing: '-0.5px'
           }}>
-            Education Resources & Syllabus
+            {t('resources.title')}
           </h1>
 
           <p style={{
@@ -236,23 +238,24 @@ export default function EducationResourcesPage() {
             lineHeight: 1.6,
             marginBottom: '24px',
           }}>
-            Access official Sri Lankan national curriculum textbooks, NIE teacher resource books, unit-by-unit syllabus breakdowns, and competency guides for Ordinary Level (O/L) and Advanced Level (A/L).
+            {t('resources.subtitle')}
           </p>
 
           {/* Quick Search Bar */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backgroundColor: 'var(--color-card-bg)',
+            border: '1px solid var(--color-border)',
             borderRadius: '16px',
             padding: '6px 16px',
             maxWidth: '680px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
           }}>
-            <Search size={20} color="#64748B" style={{ flexShrink: 0, marginRight: '10px' }} />
+            <Search size={20} color="var(--color-text-muted)" style={{ flexShrink: 0, marginRight: '10px' }} />
             <input
               type="text"
-              placeholder="Search books, syllabus topics, formulas (e.g. 'Mechanics', 'Algebra', 'LKAS')..."
+              placeholder={t('resources.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -260,7 +263,7 @@ export default function EducationResourcesPage() {
                 outline: 'none',
                 width: '100%',
                 fontSize: '15px',
-                color: '#0F172A',
+                color: 'var(--color-text-main)',
                 backgroundColor: 'transparent',
                 padding: '8px 0',
                 fontFamily: 'inherit',
@@ -418,9 +421,13 @@ export default function EducationResourcesPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Filter size={14} /> Medium:
+            <Filter size={14} /> {language === 'si' ? 'මාධ්‍යය:' : 'Medium:'}
           </span>
-          {['all', 'English', 'Sinhala'].map((med) => (
+          {[
+            { id: 'all', label: t('resources.allMediums') },
+            { id: 'English', label: t('resources.englishMedium') },
+            { id: 'Sinhala', label: t('resources.sinhalaMedium') }
+          ].map(({ id: med, label }) => (
             <button
               key={med}
               onClick={() => setFilterMedium(med)}
@@ -440,16 +447,21 @@ export default function EducationResourcesPage() {
                 transition: 'all 0.15s ease',
               }}
             >
-              {med === 'all' ? 'All Mediums' : `${med} Medium`}
+              {label}
             </button>
           ))}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-muted)' }}>
-            Format:
+            {language === 'si' ? 'වර්ගය:' : 'Format:'}
           </span>
-          {['all', 'Textbook', 'Resource Book', 'Teacher Guide'].map((typ) => (
+          {[
+            { id: 'all', label: t('resources.allTypes') },
+            { id: 'Textbook', label: t('resources.textbook') },
+            { id: 'Resource Book', label: t('resources.resourceBook') },
+            { id: 'Teacher Guide', label: t('resources.teacherGuide') }
+          ].map(({ id: typ, label }) => (
             <button
               key={typ}
               onClick={() => setFilterType(typ)}
@@ -468,7 +480,7 @@ export default function EducationResourcesPage() {
                 transition: 'all 0.15s ease',
               }}
             >
-              {typ === 'all' ? 'All Types' : typ}
+              {label}
             </button>
           ))}
         </div>
@@ -536,10 +548,10 @@ export default function EducationResourcesPage() {
         <div>
           <div style={{ marginBottom: '24px' }}>
             <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '6px' }}>
-              1. Choose Your Examination Level
+              {t('resources.step1')}
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-              Select your academic level to explore subjects, official national textbooks, and syllabus units.
+              {t('resources.step1Desc')}
             </p>
           </div>
 
@@ -587,7 +599,7 @@ export default function EducationResourcesPage() {
                       width: '64px',
                       height: '64px',
                       borderRadius: '16px',
-                      backgroundColor: lvl.bgColor,
+                      backgroundColor: isOL ? 'var(--color-primary-light)' : 'rgba(124, 58, 237, 0.15)',
                       color: lvl.color,
                       display: 'flex',
                       alignItems: 'center',
@@ -599,7 +611,7 @@ export default function EducationResourcesPage() {
                     </div>
 
                     <span style={{
-                      backgroundColor: lvl.bgColor,
+                      backgroundColor: isOL ? 'var(--color-primary-light)' : 'rgba(124, 58, 237, 0.15)',
                       color: lvl.color,
                       fontWeight: 700,
                       fontSize: '12px',
@@ -607,16 +619,16 @@ export default function EducationResourcesPage() {
                       borderRadius: '9999px',
                       letterSpacing: '0.3px',
                     }}>
-                      {lvl.badge}
+                      {isOL ? t('resources.secondaryBadge') : t('resources.seniorSecondaryBadge')}
                     </span>
                   </div>
 
                   <h3 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '8px' }}>
-                    {lvl.title}
+                    {isOL ? t('exam.ol') : t('exam.al')}
                   </h3>
 
                   <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.5, marginBottom: '22px' }}>
-                    {lvl.description}
+                    {isOL ? t('resources.olDesc') : t('resources.alDesc')}
                   </p>
 
                   <div style={{
@@ -632,12 +644,12 @@ export default function EducationResourcesPage() {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-text-main)' }}>
                       <Layers size={16} color={lvl.color} />
-                      <span>{lvl.totalSubjects} Subjects</span>
+                      <span>{lvl.totalSubjects} {t('resources.subjects')}</span>
                     </div>
                     <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--color-border)' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-text-main)' }}>
                       <BookMarked size={16} color={lvl.color} />
-                      <span>{lvl.totalBooks}+ Books & Guides</span>
+                      <span>{lvl.totalBooks}+ {t('resources.booksGuides')}</span>
                     </div>
                   </div>
 
@@ -656,7 +668,7 @@ export default function EducationResourcesPage() {
                       borderRadius: '12px',
                     }}
                   >
-                    <span>Browse {lvl.shortTitle} Curriculum</span>
+                    <span>{isOL ? t('resources.browseOl') : t('resources.browseAl')}</span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
@@ -666,8 +678,8 @@ export default function EducationResourcesPage() {
 
           {/* Quick Info Feature Box */}
           <div style={{
-            backgroundColor: '#F0FDF4',
-            border: '1px solid #BBF7D0',
+            backgroundColor: 'var(--color-card-bg)',
+            border: '1px solid var(--color-border)',
             borderRadius: '18px',
             padding: '24px 28px',
             display: 'flex',
@@ -679,8 +691,8 @@ export default function EducationResourcesPage() {
               width: '48px',
               height: '48px',
               borderRadius: '50%',
-              backgroundColor: '#DCFCE7',
-              color: '#16A34A',
+              backgroundColor: 'var(--color-success-light)',
+              color: 'var(--color-success)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -689,11 +701,11 @@ export default function EducationResourcesPage() {
               <Award size={24} />
             </div>
             <div style={{ flex: 1, minWidth: '240px' }}>
-              <div style={{ fontWeight: 800, fontSize: '16px', color: '#166534', marginBottom: '4px' }}>
-                100% Aligned with National Institute of Education (NIE) Guidelines
+              <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--color-text-main)', marginBottom: '4px' }}>
+                {t('resources.nieBannerTitle')}
               </div>
-              <div style={{ fontSize: '13px', color: '#15803D' }}>
-                All chapter competencies, lesson periods, and recommended resource books follow the current Sri Lankan Ministry of Education syllabus benchmarks.
+              <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                {t('resources.nieBannerDesc')}
               </div>
             </div>
           </div>
@@ -715,10 +727,10 @@ export default function EducationResourcesPage() {
           }}>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--color-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                Step 2 • A/L Stream Selection
+                {language === 'si' ? 'පියවර 2 • උ/පෙළ විෂය ධාරාව තෝරාගැනීම' : 'Step 2 • A/L Stream Selection'}
               </div>
               <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text-main)' }}>
-                Select Your A/L Academic Stream
+                {t('resources.selectStream')}
               </h2>
             </div>
             <button
@@ -726,7 +738,7 @@ export default function EducationResourcesPage() {
               className="btn btn-secondary btn-sm"
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              <ArrowLeft size={15} /> Back to Level Selection
+              <ArrowLeft size={15} /> {t('resources.backToOverview')}
             </button>
           </div>
 
@@ -768,7 +780,7 @@ export default function EducationResourcesPage() {
                       width: '46px',
                       height: '46px',
                       borderRadius: '12px',
-                      backgroundColor: stream.bgColor,
+                      backgroundColor: `${stream.color}20`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -780,7 +792,7 @@ export default function EducationResourcesPage() {
                       fontSize: '11px',
                       fontWeight: 700,
                       color: stream.color,
-                      backgroundColor: stream.bgColor,
+                      backgroundColor: `${stream.color}20`,
                       padding: '4px 10px',
                       borderRadius: '9999px',
                     }}>
@@ -798,7 +810,7 @@ export default function EducationResourcesPage() {
 
                 <div>
                   <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                    Subjects Included:
+                    {language === 'si' ? 'ඇතුළත් විෂයයන්:' : 'Subjects Included:'}
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
                     {stream.subjectIds.map((id) => {
@@ -833,7 +845,7 @@ export default function EducationResourcesPage() {
                     paddingTop: '10px',
                     borderTop: '1px solid var(--color-border)',
                   }}>
-                    <span>View Stream Subjects</span>
+                    <span>{language === 'si' ? 'විෂයයන් බලන්න' : 'View Stream Subjects'}</span>
                     <ChevronRight size={16} />
                   </div>
                 </div>
@@ -858,10 +870,10 @@ export default function EducationResourcesPage() {
           }}>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                {selectedLevel === 'ol' ? 'O/L Subjects' : `${currentStream?.name} Subjects`}
+                {selectedLevel === 'ol' ? (language === 'si' ? 'සා/පෙළ විෂයයන්' : 'O/L Subjects') : (language === 'si' ? `${currentStream?.name} විෂයයන්` : `${currentStream?.name} Subjects`)}
               </div>
               <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text-main)' }}>
-                Choose a Subject to View Syllabus & Books
+                {language === 'si' ? 'විෂය නිර්දේශය සහ පොත් බැලීමට විෂයයක් තෝරන්න' : 'Choose a Subject to View Syllabus & Books'}
               </h2>
             </div>
 
@@ -873,7 +885,7 @@ export default function EducationResourcesPage() {
               className="btn btn-secondary btn-sm"
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              <ArrowLeft size={15} /> Back
+              <ArrowLeft size={15} /> {language === 'si' ? 'ආපසු' : 'Back'}
             </button>
           </div>
 
@@ -955,10 +967,10 @@ export default function EducationResourcesPage() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <BookOpen size={14} color={sub.themeColor} />
-                    <span>{sub.totalBooks} Official Books</span>
+                    <span>{sub.totalBooks} {language === 'si' ? 'නිල පොත්' : 'Official Books'}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: sub.themeColor, fontWeight: 700 }}>
-                    <span>Explore</span>
+                    <span>{language === 'si' ? 'ගවේෂණය' : 'Explore'}</span>
                     <ChevronRight size={14} />
                   </div>
                 </div>
@@ -1015,11 +1027,11 @@ export default function EducationResourcesPage() {
                     {currentSubject.code}
                   </span>
                   <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                    • {selectedLevel === 'ol' ? 'O/L Examination' : `A/L ${currentStream?.name || ''}`}
+                    • {selectedLevel === 'ol' ? (language === 'si' ? 'සාමාන්‍ය පෙළ' : 'O/L Examination') : `A/L ${currentStream?.name || ''}`}
                   </span>
                 </div>
                 <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text-main)', margin: 0 }}>
-                  {currentSubject.name} – Books & Syllabus
+                  {currentSubject.name} – {language === 'si' ? 'පොත් සහ විෂය නිර්දේශය' : 'Books & Syllabus'}
                 </h2>
               </div>
             </div>
@@ -1032,7 +1044,7 @@ export default function EducationResourcesPage() {
                   className="btn btn-primary btn-sm"
                   style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <Sparkles size={14} /> Practice {currentSubject.name} Quizzes
+                  <Sparkles size={14} /> {language === 'si' ? `${currentSubject.name} ප්‍රශ්නාවලි පුහුණුව` : `Practice ${currentSubject.name} Quizzes`}
                 </button>
               )}
               <button
@@ -1040,7 +1052,7 @@ export default function EducationResourcesPage() {
                 className="btn btn-secondary btn-sm"
                 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <ArrowLeft size={14} /> Back to Subjects
+                <ArrowLeft size={14} /> {language === 'si' ? 'ආපසු විෂයයන් වෙත' : 'Back to Subjects'}
               </button>
             </div>
           </div>
@@ -1048,10 +1060,12 @@ export default function EducationResourcesPage() {
           {/* Section: Available Books and Learning Materials */}
           <div style={{ marginBottom: '20px' }}>
             <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '6px' }}>
-              Books & Recommended Learning Materials
+              {language === 'si' ? 'පොත් සහ නිර්දේශිත අධ්‍යයන ද්‍රව්‍ය' : 'Books & Recommended Learning Materials'}
             </h3>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-              Click <strong>"View Book / Open Resource"</strong> to read online, or <strong>"View Syllabus & Chapters"</strong> to inspect unit breakdowns.
+              {language === 'si' 
+                ? 'අන්තර්ජාලයෙන් කියවීමට "පොත / සම්පත බලන්න" හෝ විෂය නිර්දේශ ඒකක බැලීමට "විෂය නිර්දේශය" ක්ලික් කරන්න.'
+                : 'Click "View Book / Open Resource" to read online, or "View Syllabus & Chapters" to inspect unit breakdowns.'}
             </p>
           </div>
 
@@ -1146,7 +1160,7 @@ export default function EducationResourcesPage() {
                   className="btn btn-primary btn-sm"
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
                 >
-                  <ExternalLink size={14} /> Open Full Resource (PDF)
+                  <ExternalLink size={14} /> {language === 'si' ? 'සම්පූර්ණ සම්පත බලන්න (PDF)' : 'Open Full Resource (PDF)'}
                 </a>
                 <button
                   onClick={() => setActiveModalBook(null)}
@@ -1194,9 +1208,9 @@ export default function EducationResourcesPage() {
                   alignItems: 'center',
                   justifyContent: 'space-between'
                 }}>
-                  <span>Table of Contents</span>
+                  <span>{language === 'si' ? 'පටුන' : 'Table of Contents'}</span>
                   <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--color-border)', padding: '2px 6px', borderRadius: '4px' }}>
-                    {activeModalBook.chapters?.length || 0} Units
+                    {activeModalBook.chapters?.length || 0} {language === 'si' ? 'ඒකක' : 'Units'}
                   </span>
                 </div>
 
@@ -1218,10 +1232,10 @@ export default function EducationResourcesPage() {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', fontWeight: 700, color: isSelected ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
-                            Chapter {ch.number}
+                            {language === 'si' ? 'පරිච්ඡේදය' : 'Chapter'} {ch.number}
                           </span>
                           <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <Clock size={11} /> {ch.hours} hrs
+                            <Clock size={11} /> {ch.hours} {language === 'si' ? 'පැය' : 'hrs'}
                           </span>
                         </div>
                         <div style={{ fontSize: '13px', fontWeight: isSelected ? 700 : 600, color: isSelected ? 'var(--color-primary)' : 'var(--color-text-main)', lineHeight: 1.3 }}>
@@ -1260,10 +1274,10 @@ export default function EducationResourcesPage() {
                             padding: '4px 10px',
                             borderRadius: '6px',
                           }}>
-                            Unit / Chapter {ch.number}
+                            {language === 'si' ? 'ඒකකය / පරිච්ඡේදය' : 'Unit / Chapter'} {ch.number}
                           </span>
                           <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Clock size={14} /> Estimated Teaching Time: {ch.hours} Hours
+                            <Clock size={14} /> {language === 'si' ? `ඇස්තමේන්තුගත කාලය: පැය ${ch.hours}` : `Estimated Teaching Time: ${ch.hours} Hours`}
                           </span>
                         </div>
 
@@ -1280,7 +1294,7 @@ export default function EducationResourcesPage() {
                           marginBottom: '20px',
                         }}>
                           <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: '6px' }}>
-                            Syllabus Scope & Summary
+                            {language === 'si' ? 'විෂය නිර්දේශයේ විෂය පථය සහ සාරාංශය' : 'Syllabus Scope & Summary'}
                           </div>
                           <p style={{ fontSize: '14px', color: 'var(--color-text-main)', lineHeight: 1.6, margin: 0 }}>
                             {ch.summary}
@@ -1290,7 +1304,7 @@ export default function EducationResourcesPage() {
                         {/* Key Competencies / Concepts */}
                         <div style={{ marginBottom: '24px' }}>
                           <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-main)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <CheckCircle2 size={16} color="var(--color-success)" /> Core Competencies & Examination Topics:
+                            <CheckCircle2 size={16} color="var(--color-success)" /> {language === 'si' ? 'මූලික නිපුණතා සහ විභාග මාතෘකා:' : 'Core Competencies & Examination Topics:'}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {ch.keyConcepts?.map((concept, cIdx) => (
@@ -1330,15 +1344,15 @@ export default function EducationResourcesPage() {
                           textAlign: 'center',
                         }}>
                           <div>
-                            <div style={{ color: 'var(--color-text-muted)' }}>Language Medium</div>
+                            <div style={{ color: 'var(--color-text-muted)' }}>{language === 'si' ? 'භාෂා මාධ්‍යය' : 'Language Medium'}</div>
                             <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{activeModalBook.medium}</div>
                           </div>
                           <div>
-                            <div style={{ color: 'var(--color-text-muted)' }}>Page Count</div>
-                            <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{activeModalBook.pages} Pages</div>
+                            <div style={{ color: 'var(--color-text-muted)' }}>{language === 'si' ? 'පිටු ගණන' : 'Page Count'}</div>
+                            <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{activeModalBook.pages} {language === 'si' ? 'පිටු' : 'Pages'}</div>
                           </div>
                           <div>
-                            <div style={{ color: 'var(--color-text-muted)' }}>File Size</div>
+                            <div style={{ color: 'var(--color-text-muted)' }}>{language === 'si' ? 'ගොනු ප්‍රමාණය' : 'File Size'}</div>
                             <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{activeModalBook.fileSize}</div>
                           </div>
                         </div>
@@ -1348,8 +1362,8 @@ export default function EducationResourcesPage() {
                           <div style={{
                             padding: '16px 20px',
                             borderRadius: '14px',
-                            background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
-                            border: '1px solid #BFDBFE',
+                            background: 'linear-gradient(135deg, var(--color-card-bg) 0%, var(--color-primary-light) 100%)',
+                            border: '1px solid var(--color-border)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -1357,11 +1371,11 @@ export default function EducationResourcesPage() {
                             gap: '12px',
                           }}>
                             <div>
-                              <div style={{ fontWeight: 800, fontSize: '14px', color: '#1E40AF', marginBottom: '2px' }}>
-                                Ready to test your understanding of Chapter {ch.number}?
+                              <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--color-text-main)', marginBottom: '2px' }}>
+                                {language === 'si' ? `${ch.number} වන පරිච්ඡේදය පිළිබඳ ඔබේ අවබෝධය පරීක්ෂා කිරීමට සූදානම්ද?` : `Ready to test your understanding of Chapter ${ch.number}?`}
                               </div>
-                              <div style={{ fontSize: '12px', color: '#3B82F6' }}>
-                                Solve past paper MCQs & model questions for this subject.
+                              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                {language === 'si' ? 'මෙම විෂය සඳහා පසුගිය විභාග බහුවරණ සහ ආදර්ශ ප්‍රශ්න විසඳන්න.' : 'Solve past paper MCQs & model questions for this subject.'}
                               </div>
                             </div>
                             <button
@@ -1373,7 +1387,7 @@ export default function EducationResourcesPage() {
                               className="btn btn-primary btn-sm"
                               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                             >
-                              <Sparkles size={14} /> Practice Quizzes Now
+                              <Sparkles size={14} /> {language === 'si' ? 'ප්‍රශ්නාවලි පුහුණු වන්න' : 'Practice Quizzes Now'}
                             </button>
                           </div>
                         )}
@@ -1382,7 +1396,7 @@ export default function EducationResourcesPage() {
                   })()
                 ) : (
                   <div style={{ padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    Select a chapter to view syllabus breakdown.
+                    {language === 'si' ? 'විෂය නිර්දේශ තොරතුරු බැලීමට පරිච්ඡේදයක් තෝරන්න.' : 'Select a chapter to view syllabus breakdown.'}
                   </div>
                 )}
               </div>
@@ -1399,12 +1413,12 @@ export default function EducationResourcesPage() {
               fontSize: '12px',
               color: 'var(--color-text-muted)',
             }}>
-              <span>Ministry of Education & National Institute of Education curriculum materials</span>
+              <span>{language === 'si' ? 'අධ්‍යාපන අමාත්‍යාංශයේ සහ ජාතික අධ්‍යාපන ආයතනයේ නිල විෂය නිර්දේශ ද්‍රව්‍ය' : 'Ministry of Education & National Institute of Education curriculum materials'}</span>
               <button
                 onClick={() => setActiveModalBook(null)}
                 className="btn btn-secondary btn-sm"
               >
-                Close Viewer
+                {language === 'si' ? 'වසන්න' : 'Close Viewer'}
               </button>
             </div>
           </div>
@@ -1419,6 +1433,7 @@ export default function EducationResourcesPage() {
    SUB-COMPONENT: BOOK / RESOURCE CARD
    ═══════════════════════════════════════════════════════════════ */
 function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
+  const { language } = useLanguage();
   const subject = SUBJECTS_DATA[book.subjectId];
 
   return (
@@ -1530,11 +1545,11 @@ function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', color: 'var(--color-text-muted)' }}>
-              <span>{book.pages} Pages</span>
+              <span>{book.pages} {language === 'si' ? 'පිටු' : 'Pages'}</span>
               <span>•</span>
               <span>{book.fileSize}</span>
               <span>•</span>
-              <span>{book.downloads} Reads</span>
+              <span>{book.downloads} {language === 'si' ? 'කියවීම්' : 'Reads'}</span>
             </div>
           </div>
         </div>
@@ -1584,7 +1599,7 @@ function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
                 cursor: 'pointer',
               }}
             >
-              +{book.chapters.length - 3} more chapters
+              +{book.chapters.length - 3} {language === 'si' ? 'තවත් පරිච්ඡේද' : 'more chapters'}
             </span>
           )}
         </div>
@@ -1599,7 +1614,7 @@ function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
             marginBottom: '18px',
           }}>
             <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
-              Full Chapter List & Teaching Hours
+              {language === 'si' ? 'සම්පූර්ණ පරිච්ඡේද ලැයිස්තුව සහ ඉගැන්වීම් කාලය' : 'Full Chapter List & Teaching Hours'}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {book.chapters?.map((ch, idx) => (
@@ -1622,7 +1637,7 @@ function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
                     {ch.number}. {ch.title}
                   </span>
                   <span style={{ color: 'var(--color-text-muted)', fontWeight: 600, flexShrink: 0, marginLeft: '8px' }}>
-                    {ch.hours} hrs
+                    {ch.hours} {language === 'si' ? 'පැය' : 'hrs'}
                   </span>
                 </div>
               ))}
@@ -1638,6 +1653,7 @@ function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
         gap: '8px',
         paddingTop: '16px',
         borderTop: '1px solid var(--color-border)',
+        flexWrap: 'wrap',
       }}>
         {/* Primary View Book / Open Resource Button */}
         <button
@@ -1654,7 +1670,7 @@ function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
           }}
         >
           <Eye size={15} />
-          <span>View Book / Resource</span>
+          <span>{language === 'si' ? 'පොත / සම්පත බලන්න' : 'View Book / Resource'}</span>
         </button>
 
         {/* Secondary View Syllabus / Chapters Button */}
@@ -1672,7 +1688,7 @@ function BookCard({ book, onOpenModal, onToggleSyllabus, isSyllabusExpanded }) {
           title="Inspect syllabus competencies"
         >
           <BookMarked size={15} />
-          <span>{isSyllabusExpanded ? 'Hide Syllabus' : 'Syllabus'}</span>
+          <span>{isSyllabusExpanded ? (language === 'si' ? 'විෂය නිර්දේශය සඟවන්න' : 'Hide Syllabus') : (language === 'si' ? 'විෂය නිර්දේශය' : 'Syllabus')}</span>
         </button>
       </div>
     </div>

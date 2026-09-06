@@ -1,27 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, BookOpen, Award, User, LogOut, LogIn, ShieldCheck, Menu, X, ChevronDown, BookMarked } from 'lucide-react';
+import { Home, Search, BookOpen, Award, User, LogOut, LogIn, ShieldCheck, Menu, X, ChevronDown, BookMarked, Sun, Moon, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const NAV_HEIGHT = 64;
 
-const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: Home },
-  { path: '/quizzes', label: 'Browse Quizzes', icon: Search },
-  { path: '/resources', label: 'Resources', icon: BookMarked },
-  { path: '/my-quizzes', label: 'My Quizzes', icon: BookOpen },
-  { path: '/results-history', label: 'My Performance', icon: Award },
-  { path: '/profile', label: 'Student Profile', icon: User },
-  { path: '/admin', label: 'Admin Portal', icon: ShieldCheck },
+const navItemDefs = [
+  { path: '/dashboard', labelKey: 'nav.dashboard', fallback: 'Dashboard', icon: Home },
+  { path: '/quizzes', labelKey: 'nav.quizzes', fallback: 'Browse Quizzes', icon: Search },
+  { path: '/resources', labelKey: 'nav.resources', fallback: 'Resources', icon: BookMarked },
+  { path: '/my-quizzes', labelKey: 'nav.myQuizzes', fallback: 'My Quizzes', icon: BookOpen },
+  { path: '/results-history', labelKey: 'nav.performance', fallback: 'My Performance', icon: Award },
+  { path: '/profile', labelKey: 'nav.profile', fallback: 'Student Profile', icon: User },
+  { path: '/admin', labelKey: 'nav.admin', fallback: 'Admin Portal', icon: ShieldCheck },
 ];
 
 export default function TopHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logoutUser } = useAuth();
+  const { theme, isDark, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const langDropdownRef = useRef(null);
 
   const isCurrent = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
@@ -41,11 +47,14 @@ export default function TopHeader() {
     navigate('/login');
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setUserDropdownOpen(false);
+      }
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setLangDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -106,8 +115,8 @@ export default function TopHeader() {
           <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             <div className="logo-badge" style={{ width: '36px', height: '36px', fontSize: '15px', flexShrink: 0 }}>EQ</div>
             <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--color-text-main)', letterSpacing: '-0.3px' }}>EduQuiz Pro</div>
-              <div style={{ fontSize: '10px', color: 'var(--color-secondary)', fontWeight: 600, letterSpacing: '0.3px' }}>Paid Examination Platform</div>
+              <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--color-text-main)', letterSpacing: '-0.3px' }}>{t('app.name')}</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-secondary)', fontWeight: 600, letterSpacing: '0.3px' }}>{t('app.subtitle')}</div>
             </div>
           </Link>
 
@@ -116,7 +125,7 @@ export default function TopHeader() {
 
           {/* ── Center: Nav Links (desktop) ── */}
           <div className="topnav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-            {navItems.map((item) => {
+            {navItemDefs.map((item) => {
               const Icon = item.icon;
               const active = isCurrent(item.path);
               return (
@@ -141,7 +150,7 @@ export default function TopHeader() {
                   }}
                 >
                   <Icon size={15} />
-                  <span>{item.label}</span>
+                  <span>{t(item.labelKey, item.fallback)}</span>
                   {/* Active indicator bar */}
                   {active && (
                     <span style={{
@@ -162,7 +171,96 @@ export default function TopHeader() {
         </div>
 
         {/* ── Right section: User controls ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Theme switcher */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="theme-toggle-btn"
+            title={isDark ? t('theme.light') : t('theme.dark')}
+            aria-label={t('theme.toggle')}
+            style={{ width: '38px', padding: 0 }}
+          >
+            <span className="theme-toggle-icon">
+              {isDark ? <Sun size={18} color="#FBBF24" /> : <Moon size={18} color="#64748B" />}
+            </span>
+          </button>
+
+          {/* Language selector */}
+          <div ref={langDropdownRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              className="lang-toggle-btn"
+              title={t('language.select')}
+              aria-label={t('language.select')}
+            >
+              <Globe size={15} color="var(--color-text-muted)" />
+              <span className="lang-badge">{language === 'si' ? 'සිං' : 'EN'}</span>
+              <ChevronDown size={13} color="var(--color-text-muted)" />
+            </button>
+            {langDropdownOpen && (
+              <div style={{
+                position: 'absolute',
+                right: 0,
+                top: 'calc(100% + 6px)',
+                backgroundColor: 'var(--color-card-bg)',
+                borderRadius: 'var(--radius-sm)',
+                boxShadow: 'var(--shadow-lg)',
+                border: '1px solid var(--color-border)',
+                minWidth: '130px',
+                padding: '4px',
+                zIndex: 350,
+                animation: 'dropdownFadeIn 0.15s ease-out',
+              }}>
+                <button
+                  type="button"
+                  onClick={() => { setLanguage('en'); setLangDropdownOpen(false); }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '13px',
+                    fontWeight: language === 'en' ? 700 : 500,
+                    color: language === 'en' ? 'var(--color-primary)' : 'var(--color-text-main)',
+                    backgroundColor: language === 'en' ? 'var(--color-primary-light)' : 'transparent',
+                    border: 'none',
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <span>English</span>
+                  {language === 'en' && <span style={{ fontSize: '11px', fontWeight: 700 }}>✓</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLanguage('si'); setLangDropdownOpen(false); }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '13px',
+                    fontWeight: language === 'si' ? 700 : 500,
+                    color: language === 'si' ? 'var(--color-primary)' : 'var(--color-text-main)',
+                    backgroundColor: language === 'si' ? 'var(--color-primary-light)' : 'transparent',
+                    border: 'none',
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <span>සිංහල</span>
+                  {language === 'si' && <span style={{ fontSize: '11px', fontWeight: 700 }}>✓</span>}
+                </button>
+              </div>
+            )}
+          </div>
+
           {user ? (
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               {/* User pill button */}
@@ -256,7 +354,7 @@ export default function TopHeader() {
                       fontFamily: 'inherit',
                     }}
                   >
-                    <User size={15} /> Student Profile
+                    <User size={15} /> {t('nav.profile')}
                   </button>
 
                   {/* Admin link */}
@@ -280,7 +378,7 @@ export default function TopHeader() {
                       fontFamily: 'inherit',
                     }}
                   >
-                    <ShieldCheck size={15} /> Admin Portal
+                    <ShieldCheck size={15} /> {t('nav.admin')}
                   </button>
 
                   <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '4px 0' }} />
@@ -306,14 +404,14 @@ export default function TopHeader() {
                       fontFamily: 'inherit',
                     }}
                   >
-                    <LogOut size={15} /> Sign Out
+                    <LogOut size={15} /> {t('nav.signOut')}
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <button className="btn btn-primary btn-sm" onClick={() => navigate('/login')}>
-              <LogIn size={16} /> Sign In
+              <LogIn size={16} /> {t('nav.signIn')}
             </button>
           )}
         </div>
@@ -408,11 +506,11 @@ export default function TopHeader() {
 
             {/* Nav section label */}
             <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-text-muted)', padding: '8px 12px', letterSpacing: '0.5px' }}>
-              Navigation
+              {t('nav.navigation')}
             </div>
 
             {/* Nav items */}
-            {navItems.map((item) => {
+            {navItemDefs.map((item) => {
               const Icon = item.icon;
               const active = isCurrent(item.path);
               return (
@@ -436,10 +534,44 @@ export default function TopHeader() {
                   }}
                 >
                   <Icon size={18} />
-                  <span>{item.label}</span>
+                  <span>{t(item.labelKey, item.fallback)}</span>
                 </Link>
               );
             })}
+
+            {/* Theme & Language Drawer Controls */}
+            <div style={{ padding: '14px 12px', marginTop: '12px', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{t('theme.toggle')}</span>
+                <button
+                  onClick={toggleTheme}
+                  className="theme-toggle-btn"
+                  style={{ height: '34px', padding: '0 12px', fontSize: '12px' }}
+                >
+                  {isDark ? <Sun size={15} color="#FBBF24" /> : <Moon size={15} color="#64748B" />}
+                  <span>{isDark ? t('theme.light') : t('theme.dark')}</span>
+                </button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{t('language.select')}</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`btn btn-sm ${language === 'en' ? 'btn-primary' : 'btn-outline'}`}
+                    style={{ padding: '4px 12px', fontSize: '12px' }}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setLanguage('si')}
+                    className={`btn btn-sm ${language === 'si' ? 'btn-primary' : 'btn-outline'}`}
+                    style={{ padding: '4px 12px', fontSize: '12px' }}
+                  >
+                    සිංහල
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {/* Sign out at bottom */}
             <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
@@ -463,11 +595,11 @@ export default function TopHeader() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  <LogOut size={18} /> Sign Out
+                  <LogOut size={18} /> {t('nav.signOut')}
                 </button>
               ) : (
                 <button onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} className="btn btn-primary btn-block">
-                  <LogIn size={18} /> Sign In
+                  <LogIn size={18} /> {t('nav.signIn')}
                 </button>
               )}
             </div>

@@ -3,49 +3,51 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CreditCard, ShieldCheck } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function CheckoutPage() {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const { addPurchase } = useAuth();
+  const { t, language } = useLanguage();
 
   const handlePay = async () => {
     await api.checkout(quizId || 'quiz-math-01', 300, 'Card Payment');
     addPurchase(quizId || 'quiz-math-01');
-    alert('Payment Successful! Quiz Unlocked.');
+    alert(t('checkout.successAlert'));
     navigate(`/quiz/${quizId || 'quiz-math-01'}/instructions`);
   };
 
   return (
     <div>
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: 800 }}>Payment Checkout</h1>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Complete payment via secure gateway to unlock quiz</p>
+        <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-main)' }}>{t('checkout.title')}</h1>
+        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>{t('checkout.subtitle')}</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
         <div className="card">
-          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Select Payment Gateway</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--color-text-main)' }}>{t('checkout.selectGateway')}</h3>
           <div style={{ padding: '16px', borderRadius: '14px', border: '2px solid var(--color-primary)', backgroundColor: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <CreditCard size={24} color="var(--color-primary)" />
             <div>
-              <div style={{ fontWeight: 700 }}>Credit / Debit Card</div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Visa, MasterCard, Amex</div>
+              <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{t('checkout.cardPayment')}</div>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{t('checkout.cardTypes')}</div>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--color-success)', marginTop: '20px' }}>
-            <ShieldCheck size={16} /> <span>256-Bit SSL Encrypted Payment Guarantee</span>
+            <ShieldCheck size={16} /> <span>{t('checkout.sslSecurity')}</span>
           </div>
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Order Summary</h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '18px', marginBottom: '20px' }}>
-            <span>Total Pay:</span>
-            <span style={{ color: 'var(--color-primary)' }}>LKR 300</span>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--color-text-main)' }}>{t('checkout.orderSummary')}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '18px', marginBottom: '20px', color: 'var(--color-text-main)' }}>
+            <span>{t('checkout.totalPay')}</span>
+            <span style={{ color: 'var(--color-primary)' }}>{language === 'si' ? 'රු. 300' : 'LKR 300'}</span>
           </div>
-          <button className="btn btn-primary btn-block btn-lg" onClick={handlePay}>Pay LKR 300</button>
+          <button className="btn btn-primary btn-block btn-lg" onClick={handlePay}>{t('checkout.payBtn')}</button>
         </div>
       </div>
     </div>

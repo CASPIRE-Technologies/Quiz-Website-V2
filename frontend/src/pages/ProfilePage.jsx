@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import {
   User, Mail, Phone, School, GraduationCap, Award, CheckCircle2,
   Save, Edit3, Clock, CreditCard, BookOpen, ShieldCheck, Sparkles,
-  AlertCircle, Camera, Check, ExternalLink, ArrowRight, RefreshCw
+  AlertCircle, Camera, Check, ExternalLink, ArrowRight, RefreshCw,
+  Sun, Moon, Globe
 } from 'lucide-react';
 
 const AVATAR_PRESETS = [
@@ -40,8 +43,10 @@ const EXAM_LEVEL_OPTIONS = [
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, updateUserProfile, attempts, purchases } = useAuth();
+  const { theme, setTheme, isDark } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'edit' | 'receipts'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'edit' | 'receipts' | 'preferences'
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [profileData, setProfileData] = useState(null);
 
@@ -218,24 +223,26 @@ export default function ProfilePage() {
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text-main)' }}>Student Profile</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text-main)' }}>{t('profile.title')}</h1>
             <span className="badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <ShieldCheck size={14} /> Student Account
             </span>
           </div>
           <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-            Manage your personal credentials, track academic test progress, and view transaction history
+            Manage your personal credentials, track academic test progress, and customize app settings
           </p>
         </div>
 
         {/* Quick Tab Controls */}
         <div style={{
           display: 'flex',
-          backgroundColor: 'white',
+          backgroundColor: 'var(--color-card-bg)',
           padding: '4px',
           borderRadius: '12px',
           border: '1px solid var(--color-border)',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+          boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+          flexWrap: 'wrap',
+          gap: '4px'
         }}>
           <button
             onClick={() => setActiveTab('overview')}
@@ -254,7 +261,7 @@ export default function ProfilePage() {
               color: activeTab === 'overview' ? 'white' : 'var(--color-text-muted)'
             }}
           >
-            <User size={15} /> Overview
+            <User size={15} /> {t('profile.overview')}
           </button>
 
           <button
@@ -274,7 +281,7 @@ export default function ProfilePage() {
               color: activeTab === 'edit' ? 'white' : 'var(--color-text-muted)'
             }}
           >
-            <Edit3 size={15} /> Edit Profile
+            <Edit3 size={15} /> {t('profile.edit')}
           </button>
 
           <button
@@ -294,7 +301,27 @@ export default function ProfilePage() {
               color: activeTab === 'receipts' ? 'white' : 'var(--color-text-muted)'
             }}
           >
-            <CreditCard size={15} /> Receipts ({receiptsList.length})
+            <CreditCard size={15} /> {t('profile.receipts')} ({receiptsList.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('preferences')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              backgroundColor: activeTab === 'preferences' ? 'var(--color-primary)' : 'transparent',
+              color: activeTab === 'preferences' ? 'white' : 'var(--color-text-muted)'
+            }}
+          >
+            <Sparkles size={15} /> {t('profile.preferences')}
           </button>
         </div>
       </div>
@@ -340,7 +367,7 @@ export default function ProfilePage() {
       <div className="card" style={{
         padding: '28px',
         marginBottom: '24px',
-        background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+        background: 'linear-gradient(135deg, var(--color-card-bg) 0%, var(--color-bg) 100%)',
         position: 'relative',
         overflow: 'hidden'
       }}>
@@ -366,7 +393,7 @@ export default function ProfilePage() {
               </h2>
               <span className="badge badge-success" style={{ fontSize: '11px' }}>Active Member</span>
               {user?.provider === 'google' && (
-                <span className="badge" style={{ backgroundColor: '#EEF2FF', color: '#4338CA', fontSize: '11px' }}>
+                <span className="badge" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontSize: '11px' }}>
                   Google Linked
                 </span>
               )}
@@ -683,7 +710,7 @@ export default function ProfilePage() {
                   className="form-input"
                   value={user?.email || ''}
                   disabled
-                  style={{ backgroundColor: '#F1F5F9', color: '#64748B', cursor: 'not-allowed' }}
+                  style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text-muted)', cursor: 'not-allowed', border: '1px solid var(--color-border)' }}
                 />
                 <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>
                   Email is locked to protect your quiz purchase history and credentials.
@@ -740,7 +767,7 @@ export default function ProfilePage() {
                         padding: '16px',
                         borderRadius: '12px',
                         border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        backgroundColor: isSelected ? 'var(--color-primary-light)' : 'white',
+                        backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -831,7 +858,7 @@ export default function ProfilePage() {
             <div style={{
               textAlign: 'center',
               padding: '48px 24px',
-              backgroundColor: '#F8FAFC',
+              backgroundColor: 'var(--color-bg)',
               borderRadius: '14px',
               border: '1px dashed var(--color-border)'
             }}>
@@ -869,7 +896,7 @@ export default function ProfilePage() {
                       key={item.id || index}
                       style={{
                         borderBottom: '1px solid var(--color-border)',
-                        backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)'
+                        backgroundColor: index % 2 === 0 ? 'transparent' : 'var(--color-bg)'
                       }}
                     >
                       <td style={{ padding: '14px 16px', fontWeight: 700, fontFamily: 'monospace', color: 'var(--color-primary)' }}>
@@ -898,6 +925,257 @@ export default function ProfilePage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 4: PREFERENCES */}
+      {activeTab === 'preferences' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
+          
+          {/* Theme Settings Card */}
+          <div className="card" style={{ padding: '28px' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <Sun size={20} color="#F59E0B" /> {t('profile.themeSetting')}
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                {t('profile.themeSettingDesc')}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '16px'
+            }}>
+              {/* Light Mode Option */}
+              <div
+                onClick={() => setTheme('light')}
+                style={{
+                  padding: '20px',
+                  borderRadius: '14px',
+                  border: theme === 'light' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: theme === 'light' ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '16px',
+                  boxShadow: theme === 'light' ? '0 4px 14px rgba(37, 99, 235, 0.12)' : 'none'
+                }}
+              >
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--color-warning-light)',
+                  color: 'var(--color-warning)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Sun size={24} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-text-main)' }}>
+                      {t('theme.light')}
+                    </span>
+                    {theme === 'light' && (
+                      <span className="badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
+                        <Check size={12} /> {language === 'si' ? 'සක්‍රියයි' : 'Active'}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                    {language === 'si' ? 'දිවා කාලයේ අධ්‍යයනය සඳහා දීප්තිමත් සහ පැහැදිලි තිරය.' : 'Clean and high contrast for brightly lit environments and daylight study.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Dark Mode Option */}
+              <div
+                onClick={() => setTheme('dark')}
+                style={{
+                  padding: '20px',
+                  borderRadius: '14px',
+                  border: theme === 'dark' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: theme === 'dark' ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '16px',
+                  boxShadow: theme === 'dark' ? '0 4px 14px rgba(37, 99, 235, 0.12)' : 'none'
+                }}
+              >
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--color-secondary-light)',
+                  color: 'var(--color-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Moon size={24} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-text-main)' }}>
+                      {t('theme.dark')}
+                    </span>
+                    {theme === 'dark' && (
+                      <span className="badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
+                        <Check size={12} /> {language === 'si' ? 'සක්‍රියයි' : 'Active'}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                    {language === 'si' ? 'රාත්‍රී කාලයේ අධ්‍යයනය කිරීමේදී ඇස් වෙහෙස වීම අවම කරයි.' : 'Soft contrast designed to reduce eye strain during late night study sessions.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Language Preference Card */}
+          <div className="card" style={{ padding: '28px' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <Globe size={20} color="var(--color-secondary)" /> {t('profile.languageSetting')}
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                {t('profile.languageSettingDesc')}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '16px'
+            }}>
+              {/* English Option */}
+              <div
+                onClick={() => setLanguage('en')}
+                style={{
+                  padding: '20px',
+                  borderRadius: '14px',
+                  border: language === 'en' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: language === 'en' ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '16px',
+                  boxShadow: language === 'en' ? '0 4px 14px rgba(37, 99, 235, 0.12)' : 'none'
+                }}
+              >
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--color-primary-light)',
+                  color: 'var(--color-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '15px',
+                  flexShrink: 0
+                }}>
+                  EN
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-text-main)' }}>
+                      English
+                    </span>
+                    {language === 'en' && (
+                      <span className="badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
+                        <Check size={12} /> Active
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                    Standard English terminology, menus, quiz navigation, and system notifications.
+                  </p>
+                </div>
+              </div>
+
+              {/* Sinhala Option */}
+              <div
+                onClick={() => setLanguage('si')}
+                style={{
+                  padding: '20px',
+                  borderRadius: '14px',
+                  border: language === 'si' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: language === 'si' ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '16px',
+                  boxShadow: language === 'si' ? '0 4px 14px rgba(37, 99, 235, 0.12)' : 'none'
+                }}
+              >
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--color-success-light)',
+                  color: 'var(--color-success)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '15px',
+                  flexShrink: 0
+                }}>
+                  සිං
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-text-main)' }}>
+                      සිංහල (Sinhala)
+                    </span>
+                    {language === 'si' && (
+                      <span className="badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
+                        <Check size={12} /> {language === 'si' ? 'සක්‍රියයි' : 'Active'}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                    ශ්‍රී ලාංකික සිසුන් සඳහා සකස් කළ පූර්ණ සිංහල පරිශීලක අතුරුමුහුණත සහ විධාන.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Notice Info */}
+          <div style={{
+            padding: '16px 20px',
+            borderRadius: '12px',
+            backgroundColor: 'var(--color-primary-light)',
+            border: '1px solid var(--color-border)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '13px',
+            color: 'var(--color-text-main)'
+          }}>
+            <Sparkles size={18} color="var(--color-primary)" />
+            <span>
+              {language === 'si'
+                ? 'ඔබේ තේමාව සහ භාෂා තේරීම් ඔබගේ බ්‍රවුසරයේ ස්වයංක්‍රීයව සුරැකෙන අතර නැවත පැමිණෙන විටද සක්‍රීයව පවතී.'
+                : 'Your theme and language preferences are automatically saved to your browser and persist across sessions.'}
+            </span>
+          </div>
+
         </div>
       )}
 

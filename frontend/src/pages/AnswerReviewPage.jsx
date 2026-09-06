@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 
 export default function AnswerReviewPage() {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [quiz, setQuiz] = useState(null);
   const [questions, setQuestions] = useState([]);
 
@@ -45,9 +47,11 @@ export default function AnswerReviewPage() {
   return (
     <div style={{ maxWidth: '840px', margin: '0 auto' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: 800 }}>Solutions & Explanations</h1>
+        <h1 style={{ fontSize: '26px', fontWeight: 800 }}>
+          {language === 'si' ? 'පිළිතුරු සහ පැහැදිලි කිරීම්' : 'Solutions & Explanations'}
+        </h1>
         <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-          Itemized Answer Breakdown for {quiz ? quiz.title : 'Examination Model Paper'}
+          {language === 'si' ? 'විස්තරාත්මක පිළිතුරු විග්‍රහය:' : 'Itemized Answer Breakdown for'} {quiz ? quiz.title : 'Examination Model Paper'}
         </p>
       </div>
 
@@ -77,14 +81,18 @@ export default function AnswerReviewPage() {
           <div key={q.id || idx} className="card" style={{ marginBottom: '20px', borderLeft: `6px solid ${isCorrect ? 'var(--color-success)' : 'var(--color-error)'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Question {idx + 1}</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>
+                  {language === 'si' ? 'ප්‍රශ්නය' : 'Question'} {idx + 1}
+                </span>
                 {isMulti && (
                   <span className="badge badge-primary" style={{ fontSize: '11px' }}>
-                    Multi-Correct
+                    {language === 'si' ? 'බහුවිධ නිවැරදි' : 'Multi-Correct'}
                   </span>
                 )}
               </div>
-              <span className={`badge ${isCorrect ? 'badge-success' : 'badge-error'}`}>{isCorrect ? 'Correct ✓' : 'Incorrect ✕'}</span>
+              <span className={`badge ${isCorrect ? 'badge-success' : 'badge-error'}`}>
+                {isCorrect ? (language === 'si' ? 'නිවැරදි ✓' : 'Correct ✓') : (language === 'si' ? 'වැරදි ✕' : 'Incorrect ✕')}
+              </span>
             </div>
 
             <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.4 }}>{q.text}</h4>
@@ -96,7 +104,7 @@ export default function AnswerReviewPage() {
                 borderRadius: '10px',
                 overflow: 'hidden',
                 border: '1px solid var(--color-border)',
-                backgroundColor: '#F8FAFC',
+                backgroundColor: 'var(--color-bg)',
                 maxHeight: '280px',
                 display: 'flex',
                 alignItems: 'center',
@@ -135,7 +143,7 @@ export default function AnswerReviewPage() {
                       </div>
                       {isKey && (
                         <span style={{ color: 'var(--color-success)', fontSize: '12px', fontWeight: 800, flexShrink: 0 }}>
-                          ✓ Correct Key
+                          ✓ {language === 'si' ? 'නිවැරදි පිළිතුර' : 'Correct Key'}
                         </span>
                       )}
                     </div>
@@ -144,25 +152,27 @@ export default function AnswerReviewPage() {
               </div>
             ) : (
               <div style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px dashed var(--color-border)', fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                Descriptive / Open-ended Question
+                {language === 'si' ? 'විස්තරාත්මක / විවෘත ප්‍රශ්නයක්' : 'Descriptive / Open-ended Question'}
               </div>
             )}
 
             {correctIndicesList.length > 0 && (
               <div style={{ marginBottom: '12px', fontSize: '13px', fontWeight: 700, color: 'var(--color-success)' }}>
-                ✓ Correct {correctIndicesList.length > 1 ? 'Answer Keys' : 'Answer Key'}: {correctIndicesList.map(i => `Option ${String.fromCharCode(65 + i)}`).join(', ')}
+                ✓ {language === 'si' ? 'නිවැරදි පිළිතුර' : (correctIndicesList.length > 1 ? 'Correct Answer Keys' : 'Correct Answer Key')}: {correctIndicesList.map(i => `${language === 'si' ? 'වරණය' : 'Option'} ${String.fromCharCode(65 + i)}`).join(', ')}
               </div>
             )}
 
-            <div style={{ backgroundColor: 'var(--color-primary-light)', padding: '16px', borderRadius: '14px', fontSize: '14px', color: '#1E3A8A', border: '1px solid var(--color-primary-border)' }}>
-              <strong>Solution Explanation:</strong><br />
-              {q.explanation || 'No detailed step-by-step solution provided for this question.'}
+            <div style={{ backgroundColor: 'var(--color-primary-light)', padding: '16px', borderRadius: '14px', fontSize: '14px', color: 'var(--color-text-main)', border: '1px solid var(--color-primary-border)' }}>
+              <strong>{language === 'si' ? 'පැහැදිලි කිරීම:' : 'Solution Explanation:'}</strong><br />
+              {q.explanation || (language === 'si' ? 'මෙම ප්‍රශ්නය සඳහා විස්තරාත්මක පැහැදිලි කිරීමක් සපයා නැත.' : 'No detailed step-by-step solution provided for this question.')}
             </div>
           </div>
         );
       })}
 
-      <button className="btn btn-outline btn-lg" onClick={() => navigate(`/quiz/${quizId}/result`)}>Back to Results</button>
+      <button className="btn btn-outline btn-lg" onClick={() => navigate(`/quiz/${quizId}/result`)}>
+        {language === 'si' ? 'ආපසු ප්‍රතිඵල වෙත' : 'Back to Results'}
+      </button>
     </div>
   );
 }

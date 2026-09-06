@@ -5,11 +5,13 @@ import {
   CheckCircle2, ArrowRight, BarChart3, ChevronRight, ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 
 export default function ResultsHistoryPage() {
   const navigate = useNavigate();
   const { user, attempts } = useAuth();
+  const { t } = useLanguage();
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -98,10 +100,10 @@ export default function ResultsHistoryPage() {
   const subjectPerformance = useMemo(() => {
     // Standard 4 subjects requested
     const subjects = [
-      { name: 'Mathematics', color: '#2563EB', key: 'math', defaultScore: 85 },
-      { name: 'Science', color: '#10B981', key: 'science', defaultScore: 78 },
-      { name: 'ICT', color: '#7C3AED', key: 'ict', defaultScore: 92 },
-      { name: 'English', color: '#F59E0B', key: 'english', defaultScore: 80 }
+      { name: t('subject.math'), color: '#2563EB', key: 'math', defaultScore: 85 },
+      { name: t('subject.science'), color: '#10B981', key: 'science', defaultScore: 78 },
+      { name: t('subject.ict'), color: '#7C3AED', key: 'ict', defaultScore: 92 },
+      { name: t('subject.english'), color: '#F59E0B', key: 'english', defaultScore: 80 }
     ];
 
     return subjects.map(sub => {
@@ -122,7 +124,7 @@ export default function ResultsHistoryPage() {
         score
       };
     });
-  }, [completedAttemptsList]);
+  }, [completedAttemptsList, t]);
 
   // 4. CHART DATA (Chart showing quiz scores)
   const chartData = useMemo(() => {
@@ -151,10 +153,10 @@ export default function ResultsHistoryPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '4px' }}>
-              Results & My Performance
+              {t('performance.title')}
             </h1>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-              Track your exam attempts, test accuracy, and subject mastery over time
+              {t('performance.subtitle')}
             </p>
           </div>
 
@@ -163,7 +165,7 @@ export default function ResultsHistoryPage() {
             onClick={() => navigate('/quizzes')}
             style={{ fontSize: '13px', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <BookOpen size={16} /> Take a Quiz
+            <BookOpen size={16} /> {t('performance.takeQuiz')}
           </button>
         </div>
       </div>
@@ -180,8 +182,8 @@ export default function ResultsHistoryPage() {
         {/* Total Quizzes */}
         <div className="card" style={{ padding: '22px 20px', borderLeft: '4px solid #2563EB' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>Total Quizzes</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{t('performance.totalQuizzes')}</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <BookOpen size={18} color="#2563EB" />
             </div>
           </div>
@@ -189,15 +191,15 @@ export default function ResultsHistoryPage() {
             {summary.totalQuizzes}
           </div>
           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>
-            Completed papers
+            {t('performance.completedPapers')}
           </span>
         </div>
 
         {/* Average Score */}
         <div className="card" style={{ padding: '22px 20px', borderLeft: '4px solid #10B981' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>Average Score</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{t('performance.avgScore')}</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'var(--color-success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <TrendingUp size={18} color="#10B981" />
             </div>
           </div>
@@ -205,15 +207,15 @@ export default function ResultsHistoryPage() {
             {summary.averageScore}%
           </div>
           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>
-            Overall mean score
+            {t('performance.overallMean')}
           </span>
         </div>
 
         {/* Best Score */}
         <div className="card" style={{ padding: '22px 20px', borderLeft: '4px solid #F59E0B' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>Best Score</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{t('performance.bestScore')}</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Trophy size={18} color="#F59E0B" />
             </div>
           </div>
@@ -221,15 +223,15 @@ export default function ResultsHistoryPage() {
             {summary.bestScore}%
           </div>
           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>
-            Highest achievement
+            {t('performance.highestAchieve')}
           </span>
         </div>
 
         {/* Accuracy */}
         <div className="card" style={{ padding: '22px 20px', borderLeft: '4px solid #7C3AED' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>Accuracy</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>{t('performance.accuracy')}</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'rgba(124, 58, 237, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Target size={18} color="#7C3AED" />
             </div>
           </div>
@@ -237,7 +239,7 @@ export default function ResultsHistoryPage() {
             {summary.accuracy}%
           </div>
           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>
-            Correct answer rate
+            {t('performance.correctRate')}
           </span>
         </div>
       </div>
@@ -256,13 +258,13 @@ export default function ResultsHistoryPage() {
         <div className="card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BarChart3 size={18} color="var(--color-primary)" /> Performance Chart
+              <BarChart3 size={18} color="var(--color-primary)" /> {t('performance.chartTitle')}
             </h3>
-            <span className="badge badge-primary" style={{ fontSize: '11px' }}>Score % Trend</span>
+            <span className="badge badge-primary" style={{ fontSize: '11px' }}>{t('performance.scoreTrend')}</span>
           </div>
 
           <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-            Visual progression of your percentage scores across examination attempts
+            {t('performance.chartDesc')}
           </p>
 
           {/* Simple Responsive SVG Bar & Trend Chart */}
@@ -338,13 +340,13 @@ export default function ResultsHistoryPage() {
         <div className="card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Award size={18} color="#7C3AED" /> My Performance
+              <Award size={18} color="#7C3AED" /> {t('performance.myPerformance')}
             </h3>
-            <span className="badge badge-neutral" style={{ fontSize: '11px' }}>Subject Mastery</span>
+            <span className="badge badge-neutral" style={{ fontSize: '11px' }}>{t('performance.subjectMastery')}</span>
           </div>
 
           <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '22px' }}>
-            Estimated skill levels and accuracy based on completed quizzes
+            {t('performance.subjectMasteryDesc')}
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -362,10 +364,10 @@ export default function ResultsHistoryPage() {
                 {/* Progress Bar */}
                 <div style={{
                   height: '10px',
-                  backgroundColor: '#F1F5F9',
+                  backgroundColor: 'var(--color-bg)',
                   borderRadius: '9999px',
                   overflow: 'hidden',
-                  border: '1px solid #E2E8F0'
+                  border: '1px solid var(--color-border)'
                 }}>
                   <div style={{
                     width: `${subj.score}%`,
@@ -389,16 +391,16 @@ export default function ResultsHistoryPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
             <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Clock size={18} color="var(--color-primary)" /> Recent Results
+              <Clock size={18} color="var(--color-primary)" /> {t('performance.recentResults')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-              Detailed logs and score cards from your past exam sessions
+              {t('performance.recentResultsDesc')}
             </p>
           </div>
 
           {completedAttemptsList.length > 0 && (
             <span className="badge badge-primary" style={{ fontSize: '12px' }}>
-              {completedAttemptsList.length} Records
+              {t('performance.recordsCount').replace('{count}', completedAttemptsList.length)}
             </span>
           )}
         </div>
@@ -407,23 +409,23 @@ export default function ResultsHistoryPage() {
           <div style={{
             textAlign: 'center',
             padding: '48px 24px',
-            backgroundColor: '#F8FAFC',
+            backgroundColor: 'var(--color-bg)',
             borderRadius: '14px',
             border: '1px dashed var(--color-border)'
           }}>
             <Award size={44} color="var(--color-text-muted)" style={{ margin: '0 auto 12px auto', opacity: 0.5 }} />
             <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-main)', marginBottom: '6px' }}>
-              No Recent Results Found
+              {t('performance.noResultsTitle')}
             </h4>
             <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', maxWidth: '380px', margin: '0 auto 16px auto' }}>
-              You haven't completed any timed quizzes yet. Take a practice paper to see your score cards and progress recorded here.
+              {t('performance.noResultsDesc')}
             </p>
             <button
               className="btn btn-primary"
               onClick={() => navigate('/quizzes')}
               style={{ fontSize: '13px', padding: '10px 20px' }}
             >
-              Browse Available Quizzes
+              {t('performance.browseAvailable')}
             </button>
           </div>
         ) : (
@@ -431,11 +433,11 @@ export default function ResultsHistoryPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--color-bg)', borderBottom: '1px solid var(--color-border)' }}>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>Quiz Name</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>Date</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>Score</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>Percentage</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)', textAlign: 'right' }}>Action</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>{t('performance.tableQuizName')}</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>{t('performance.tableDate')}</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>{t('performance.tableScore')}</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)' }}>{t('performance.tablePercentage')}</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-text-muted)', textAlign: 'right' }}>{t('performance.tableAction')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -444,7 +446,7 @@ export default function ResultsHistoryPage() {
                     key={item.quizId || index}
                     style={{
                       borderBottom: '1px solid var(--color-border)',
-                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)'
+                      backgroundColor: index % 2 === 0 ? 'transparent' : 'var(--color-bg)'
                     }}
                   >
                     <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--color-text-main)' }}>
@@ -478,7 +480,7 @@ export default function ResultsHistoryPage() {
                         onClick={() => navigate(`/quiz/${item.quizId}/result`)}
                         style={{ fontWeight: 700, fontSize: '13px', padding: '6px 14px' }}
                       >
-                        View Result
+                        {t('performance.viewResult')}
                       </button>
                     </td>
                   </tr>
