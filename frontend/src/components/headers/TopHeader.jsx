@@ -17,9 +17,9 @@ import {
   Moon,
   Globe,
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 const NAV_HEIGHT = 70;
 
@@ -141,7 +141,7 @@ export default function TopHeader() {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 24px",
-          zIndex: 200,
+          zIndex: 999,
           boxShadow: isDark ? "0 4px 30px rgba(0, 0, 0, 0.1)" : "0 4px 30px rgba(0, 0, 0, 0.27)",
           background: isDark ? "rgba(18, 29, 40, 0.1)" :  "#ffff",
           borderRadius: isDark ? "0 0 16px 16px" : "16px",
@@ -204,7 +204,7 @@ export default function TopHeader() {
             >
               EQ
             </div>
-            <div style={{ lineHeight: 1.2 }}>
+            <div className="logo-text" style={{ lineHeight: 1.2 }}>
               <div
                 style={{
                   fontWeight: 800,
@@ -801,6 +801,9 @@ export default function TopHeader() {
           }
           .logo-text {
             display: nones !important;
+          }
+          .logo-text {
+            display: none !important;
           }
         }
       `}</style>

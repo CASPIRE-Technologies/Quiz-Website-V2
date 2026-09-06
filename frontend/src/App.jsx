@@ -10,7 +10,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
 
-import TopHeader from "./components/TopHeader";
+import TopHeader from "./components/headers/TopHeader";
 
 import AuthPage from "./pages/auth/AuthPage";
 import SelectExamLevelPage from "./pages/SelectExamLevelPage";
@@ -30,6 +30,7 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminQuizWizardPage from "./pages/AdminQuizWizardPage";
 import EducationResourcesPage from "./pages/EducationResourcesPage";
 import WelcomePage from "./pages/WelcomePage";
+import LandingPage from "./pages/landing/LandingPage";
 
 // Guard for protected routes requiring authentication & onboarding checks
 function ProtectedRoute({ children }) {
@@ -153,7 +154,7 @@ export default function App() {
                 {/* Student Protected Routes */}
                 <Route
                   path="/"
-                  element={<Navigate to="/dashboard" replace />}
+                  element={<LandingPage />}
                 />
                 <Route
                   path="/welcome"
