@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, UserPlus, LogIn, XCircle } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
+import { CheckCircle2, UserPlus, LogIn, XCircle, Sun, Moon, Globe } from 'lucide-react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const { loginUser, registerAccount, googleLoginUser } = useAuth();
+  const { theme, isDark, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
@@ -148,13 +152,37 @@ export default function AuthPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#F8FAFC',
+      backgroundColor: 'var(--color-bg)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px 16px',
       position: 'relative'
     }}>
+
+      {/* Floating Theme and Language Switcher */}
+      <div style={{ position: 'absolute', top: '20px', right: '24px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 110 }}>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          title={isDark ? t('theme.light') : t('theme.dark')}
+          aria-label={t('theme.toggle')}
+          style={{ width: '38px', padding: 0 }}
+        >
+          {isDark ? <Sun size={18} color="#FBBF24" /> : <Moon size={18} color="#64748B" />}
+        </button>
+        <button
+          type="button"
+          onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
+          className="lang-toggle-btn"
+          title={t('language.select')}
+          aria-label={t('language.select')}
+        >
+          <Globe size={15} color="var(--color-text-muted)" />
+          <span className="lang-badge">{language === 'si' ? 'සිං' : 'EN'}</span>
+        </button>
+      </div>
       
       {/* Splash Screen Overlay */}
       {isSplashing && (
@@ -172,11 +200,12 @@ export default function AuthPage() {
           animation: 'fadeIn 0.3s ease'
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--color-card-bg)',
+            border: '1px solid var(--color-border)',
             borderRadius: '24px',
             padding: '40px 48px',
             textAlign: 'center',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+            boxShadow: 'var(--shadow-lg)',
             maxWidth: '420px',
             width: '90%'
           }}>
@@ -184,8 +213,8 @@ export default function AuthPage() {
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              backgroundColor: authPanelStatus === 'success' ? '#DCFCE7' : '#FEE2E2',
-              color: authPanelStatus === 'success' ? '#16A34A' : '#DC2626',
+              backgroundColor: authPanelStatus === 'success' ? 'var(--color-success-light)' : 'var(--color-error-light)',
+              color: authPanelStatus === 'success' ? 'var(--color-success)' : 'var(--color-error)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -195,13 +224,17 @@ export default function AuthPage() {
               {authPanelStatus === 'success' ? <CheckCircle2 size={36} /> : <XCircle size={36} />}
             </div>
             
-            <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>
-              {authPanelStatus === 'success' ? 'Authentication Successful!' : 'Authentication Notice'}
-            </h2>
-            <p style={{ fontSize: '14px', color: '#64748B', fontWeight: 500 }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '8px' }}>
               {authPanelStatus === 'success'
-                ? <>Logging into EduQuiz database as <strong>{activeAccountName}</strong>...</>
-                : (authError || 'The username or password is incorrect.')}
+                ? (language === 'si' ? 'පිවිසුම සාර්ථකයි!' : 'Authentication Successful!')
+                : (language === 'si' ? 'දැනුම්දීම' : 'Authentication Notice')}
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+              {authPanelStatus === 'success'
+                ? (language === 'si'
+                    ? <><strong>{activeAccountName}</strong> ලෙස EduQuiz පද්ධතියට පිවිසෙමින්...</>
+                    : <>Logging into EduQuiz database as <strong>{activeAccountName}</strong>...</>)
+                : (authError || (language === 'si' ? 'ඊමේල් ලිපිනය හෝ මුරපදය වැරදියි.' : 'The username or password is incorrect.'))}
             </p>
           </div>
         </div>
@@ -215,12 +248,12 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 10px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Create Student Account</h2>
-              <p style={{ fontSize: '13px', color: '#64748B' }}>Register your account on EduQuiz Platform</p>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text-main)' }}>{t('auth.signUpTitle')}</h2>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{t('auth.signUpDesc')}</p>
             </div>
 
             {authError && (
-              <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
+              <div style={{ backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
                 {authError}
               </div>
             )}
@@ -234,15 +267,15 @@ export default function AuthPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
-                backgroundColor: 'white',
-                border: '1.5px solid #E2E8F0',
-                color: '#0F172A',
+                backgroundColor: 'var(--color-card-bg)',
+                border: '1.5px solid var(--color-border)',
+                color: 'var(--color-text-main)',
                 fontWeight: 600,
                 fontSize: '14px',
                 padding: '10px',
                 borderRadius: '10px',
                 marginBottom: '14px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                boxShadow: 'var(--shadow-sm)',
                 cursor: 'pointer'
               }}
             >
@@ -252,29 +285,29 @@ export default function AuthPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              Sign up with Google
+              {t('auth.googleSignIn')}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0 14px 0' }}>
-              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
-              <span style={{ padding: '0 10px', fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>or email</span>
-              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
+              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
+              <span style={{ padding: '0 10px', fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('auth.orEmail')}</span>
+              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '10px' }}>
-              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>Full Name *</label>
+              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t('auth.fullName')} *</label>
               <input
                 type="text"
                 className="form-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your full name"
+                placeholder={t('auth.fullNamePlaceholder')}
                 required
               />
             </div>
 
             <div className="form-group" style={{ marginBottom: '10px' }}>
-              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>Email Address *</label>
+              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t('auth.email')} *</label>
               <input
                 type="email"
                 className="form-input"
@@ -286,7 +319,7 @@ export default function AuthPage() {
             </div>
 
             <div className="form-group" style={{ marginBottom: '12px' }}>
-              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>Create Password *</label>
+              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t('auth.createPassword')} *</label>
               <input
                 type="password"
                 className="form-input"
@@ -298,7 +331,7 @@ export default function AuthPage() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '10px' }}>
-              <UserPlus size={16} /> Register Account
+              <UserPlus size={16} /> {t('auth.registerBtn')}
             </button>
           </form>
         </div>
@@ -308,12 +341,12 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 10px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Student & Admin Sign In</h2>
-              <p style={{ fontSize: '13px', color: '#64748B' }}>Sign in with credentials or Google</p>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text-main)' }}>{t('auth.signInTitle')}</h2>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{t('auth.signInDesc')}</p>
             </div>
 
             {authError && (
-              <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
+              <div style={{ backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
                 {authError}
               </div>
             )}
@@ -327,15 +360,15 @@ export default function AuthPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
-                backgroundColor: 'white',
-                border: '1.5px solid #E2E8F0',
-                color: '#0F172A',
+                backgroundColor: 'var(--color-card-bg)',
+                border: '1.5px solid var(--color-border)',
+                color: 'var(--color-text-main)',
                 fontWeight: 600,
                 fontSize: '14px',
                 padding: '10px',
                 borderRadius: '10px',
                 marginBottom: '14px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                boxShadow: 'var(--shadow-sm)',
                 cursor: 'pointer'
               }}
             >
@@ -345,29 +378,29 @@ export default function AuthPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              Sign in with Google
+              {t('auth.googleSignIn')}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0 14px 0' }}>
-              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
-              <span style={{ padding: '0 10px', fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>or email</span>
-              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
+              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
+              <span style={{ padding: '0 10px', fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('auth.orEmail')}</span>
+              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '10px' }}>
-              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>Email or Username</label>
+              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t('auth.emailOrUser')}</label>
               <input
                 type="text"
                 className="form-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email or admin"
+                placeholder={language === 'si' ? 'ඔබගේ ඊමේල් ලිපිනය ඇතුලත් කරන්න' : 'Enter your email or admin'}
                 required
               />
             </div>
 
             <div className="form-group" style={{ marginBottom: '12px' }}>
-              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>Password</label>
+              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t('auth.password')}</label>
               <input
                 type="password"
                 className="form-input"
@@ -379,7 +412,7 @@ export default function AuthPage() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '10px' }}>
-              <LogIn size={16} /> Sign In to My Account
+              <LogIn size={16} /> {t('auth.signInBtn')}
             </button>
           </form>
         </div>
@@ -392,11 +425,11 @@ export default function AuthPage() {
                 <img src="/auth-bg-transparent.png" alt="EduQuiz Illustration" className="overlay-illustration-img" />
               </div>
               <div className="logo-badge" style={{ background: 'white', color: '#4F46E5', margin: '0 auto 10px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>Welcome Back!</h2>
+              <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>{t('auth.welcomeBack')}</h2>
               <p style={{ fontSize: '14px', opacity: 0.9, lineHeight: 1.5, maxWidth: '300px' }}>
-                To keep connected with your quiz learning progress, please login with your personal info
+                {t('auth.welcomeBackMsg')}
               </p>
-              <button className="ghost-btn" onClick={() => setIsSignUp(false)}>Sign In</button>
+              <button className="ghost-btn" onClick={() => setIsSignUp(false)}>{t('nav.signIn')}</button>
             </div>
 
             <div className="overlay-panel overlay-right">
@@ -404,11 +437,11 @@ export default function AuthPage() {
                 <img src="/auth-bg-transparent.png" alt="EduQuiz Illustration" className="overlay-illustration-img" />
               </div>
               <div className="logo-badge" style={{ background: 'white', color: '#4F46E5', margin: '0 auto 10px auto' }}>EQ</div>
-              <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>Create Real Account</h2>
+              <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>{t('auth.createAccountPrompt')}</h2>
               <p style={{ fontSize: '14px', opacity: 0.9, lineHeight: 1.5, maxWidth: '300px' }}>
-                Register your own personal account to begin timed quizzes and save your results to EduQuiz Database
+                {t('auth.createAccountMsg')}
               </p>
-              <button className="ghost-btn" onClick={() => setIsSignUp(true)}>Create Account</button>
+              <button className="ghost-btn" onClick={() => setIsSignUp(true)}>{t('auth.registerBtn')}</button>
             </div>
           </div>
         </div>

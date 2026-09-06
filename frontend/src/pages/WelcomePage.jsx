@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Zap, TrendingUp, Trophy, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
+import { BookOpen, Zap, TrendingUp, Trophy, ArrowRight, Sparkles, CheckCircle2, Sun, Moon, Globe } from 'lucide-react';
 
 export default function WelcomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const { t, language, setLanguage } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,43 +38,55 @@ export default function WelcomePage() {
   const featureCards = [
     {
       id: 'card-feature-learn',
-      title: 'Learn',
-      description: 'Access lessons and study materials.',
+      titleKey: 'welcome.learnTitle',
+      descKey: 'welcome.learnDesc',
+      tagKey: 'welcome.learnTag',
+      fallbackTitle: 'Learn',
+      fallbackDesc: 'Access lessons and study materials.',
+      fallbackTag: 'Study Materials',
       icon: <BookOpen size={28} color="#2563EB" />,
-      tag: 'Study Materials',
       accentColor: '#2563EB',
-      bgColor: '#EFF6FF',
-      borderColor: '#BFDBFE',
+      bgColor: 'var(--color-primary-light)',
+      borderColor: 'var(--color-border)',
     },
     {
       id: 'card-feature-practice',
-      title: 'Practice',
-      description: 'Improve your knowledge with quizzes.',
+      titleKey: 'welcome.practiceTitle',
+      descKey: 'welcome.practiceDesc',
+      tagKey: 'welcome.practiceTag',
+      fallbackTitle: 'Practice',
+      fallbackDesc: 'Improve your knowledge with quizzes.',
+      fallbackTag: 'Interactive Quizzes',
       icon: <Zap size={28} color="#7C3AED" />,
-      tag: 'Interactive Quizzes',
       accentColor: '#7C3AED',
-      bgColor: '#F5F3FF',
-      borderColor: '#DDD6FE',
+      bgColor: 'var(--color-secondary-light)',
+      borderColor: 'var(--color-border)',
     },
     {
       id: 'card-feature-track',
-      title: 'Track Your Progress',
-      description: 'Monitor your performance.',
+      titleKey: 'welcome.trackTitle',
+      descKey: 'welcome.trackDesc',
+      tagKey: 'welcome.trackTag',
+      fallbackTitle: 'Track Your Progress',
+      fallbackDesc: 'Monitor your performance.',
+      fallbackTag: 'Real-time Analytics',
       icon: <TrendingUp size={28} color="#059669" />,
-      tag: 'Real-time Analytics',
       accentColor: '#059669',
-      bgColor: '#ECFDF5',
-      borderColor: '#A7F3D0',
+      bgColor: 'var(--color-success-light)',
+      borderColor: 'var(--color-border)',
     },
     {
       id: 'card-feature-achieve',
-      title: 'Achieve Your Goals',
-      description: 'Work towards your academic goals.',
+      titleKey: 'welcome.achieveTitle',
+      descKey: 'welcome.achieveDesc',
+      tagKey: 'welcome.achieveTag',
+      fallbackTitle: 'Achieve Your Goals',
+      fallbackDesc: 'Work towards your academic goals.',
+      fallbackTag: 'Exam Readiness',
       icon: <Trophy size={28} color="#D97706" />,
-      tag: 'Exam Readiness',
       accentColor: '#D97706',
-      bgColor: '#FEF3C7',
-      borderColor: '#FDE68A',
+      bgColor: 'var(--color-warning-light)',
+      borderColor: 'var(--color-border)',
     },
   ];
 
@@ -78,7 +94,7 @@ export default function WelcomePage() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#F8FAFC',
+        backgroundColor: 'var(--color-bg)',
         backgroundImage: 'radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.07) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(124, 58, 237, 0.07) 0px, transparent 50%)',
         display: 'flex',
         alignItems: 'center',
@@ -90,13 +106,36 @@ export default function WelcomePage() {
         transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
+      {/* Floating Theme and Language Switcher */}
+      <div style={{ position: 'absolute', top: '20px', right: '24px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 110 }}>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          title={isDark ? t('theme.light') : t('theme.dark')}
+          style={{ width: '38px', padding: 0 }}
+        >
+          {isDark ? <Sun size={18} color="#FBBF24" /> : <Moon size={18} color="#64748B" />}
+        </button>
+        <button
+          type="button"
+          onClick={() => setLanguage(language === 'en' ? 'si' : 'en')}
+          className="lang-toggle-btn"
+          title={t('language.select')}
+        >
+          <Globe size={15} color="var(--color-text-muted)" />
+          <span className="lang-badge">{language === 'si' ? 'සිං' : 'EN'}</span>
+        </button>
+      </div>
+
       <div
         style={{
           maxWidth: '960px',
           width: '100%',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: 'var(--color-card-bg)',
           borderRadius: '28px',
-          boxShadow: '0 25px 60px -15px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(226, 232, 240, 0.8)',
+          boxShadow: 'var(--shadow-lg)',
+          border: '1px solid var(--color-border)',
           padding: '52px 40px',
           position: 'relative',
           overflow: 'hidden',
@@ -136,16 +175,16 @@ export default function WelcomePage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                backgroundColor: '#EFF6FF',
-                color: '#2563EB',
+                backgroundColor: 'var(--color-primary-light)',
+                color: 'var(--color-primary)',
                 padding: '6px 14px',
                 borderRadius: '9999px',
                 fontSize: '13px',
                 fontWeight: 700,
-                border: '1px solid #BFDBFE',
+                border: '1px solid var(--color-border)',
               }}
             >
-              <Sparkles size={14} /> Account Created Successfully
+              <Sparkles size={14} /> {t('welcome.badge')}
             </div>
           </div>
 
@@ -153,24 +192,24 @@ export default function WelcomePage() {
             style={{
               fontSize: '34px',
               fontWeight: 800,
-              color: '#0F172A',
+              color: 'var(--color-text-main)',
               marginBottom: '14px',
               lineHeight: 1.25,
               letterSpacing: '-0.5px',
             }}
           >
-            Welcome to Your Learning Journey
+            {t('welcome.title')}
           </h1>
 
           <p
             style={{
               fontSize: '16px',
-              color: '#475569',
+              color: 'var(--color-text-muted)',
               lineHeight: 1.6,
               margin: '0 auto',
             }}
           >
-            Start your learning journey with us. Explore lessons, practice with quizzes, track your progress, and improve your knowledge at your own pace. Everything you need to learn and grow is just a few clicks away.
+            {t('welcome.desc')}
           </p>
         </div>
 
@@ -189,10 +228,10 @@ export default function WelcomePage() {
               id={card.id}
               className="welcome-card"
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: 'var(--color-card-bg)',
                 borderRadius: '20px',
                 padding: '24px 20px',
-                border: '1.5px solid #E2E8F0',
+                border: '1.5px solid var(--color-border)',
                 boxShadow: '0 4px 12px rgba(15, 23, 42, 0.04)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -233,30 +272,30 @@ export default function WelcomePage() {
                     marginBottom: '8px',
                   }}
                 >
-                  <CheckCircle2 size={12} /> {card.tag}
+                  <CheckCircle2 size={12} /> {t(card.tagKey, card.fallbackTag)}
                 </div>
 
                 <h3
                   style={{
                     fontSize: '18px',
                     fontWeight: 800,
-                    color: '#0F172A',
+                    color: 'var(--color-text-main)',
                     marginBottom: '8px',
                     lineHeight: 1.3,
                   }}
                 >
-                  {card.title}
+                  {t(card.titleKey, card.fallbackTitle)}
                 </h3>
 
                 <p
                   style={{
                     fontSize: '13.5px',
-                    color: '#64748B',
+                    color: 'var(--color-text-muted)',
                     lineHeight: 1.5,
                     margin: 0,
                   }}
                 >
-                  {card.description}
+                  {t(card.descKey, card.fallbackDesc)}
                 </p>
               </div>
             </div>
@@ -285,11 +324,11 @@ export default function WelcomePage() {
               transition: 'all 0.2s ease',
             }}
           >
-            Get Started <ArrowRight size={18} />
+            {t('welcome.getStarted')} <ArrowRight size={18} />
           </button>
           
-          <div style={{ marginTop: '16px', fontSize: '13px', color: '#94A3B8' }}>
-            Clicking Get Started takes you directly to your personalized Student Dashboard
+          <div style={{ marginTop: '16px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
+            {t('welcome.getStartedHint')}
           </div>
         </div>
       </div>
@@ -298,7 +337,7 @@ export default function WelcomePage() {
         .welcome-card:hover {
           transform: translateY(-4px);
           box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.1) !important;
-          border-color: #CBD5E1 !important;
+          border-color: var(--color-primary) !important;
         }
 
         #btn-welcome-get-started:hover {

@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 import TopHeader from './components/TopHeader';
 
@@ -30,8 +32,8 @@ function ProtectedRoute({ children }) {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
-        <div style={{ width: '40px', height: '40px', border: '4px solid #E2E8F0', borderTopColor: '#4F46E5', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+        <div style={{ width: '40px', height: '40px', border: '4px solid var(--color-border)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
@@ -59,8 +61,8 @@ function AdminRoute({ children }) {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
-        <div style={{ width: '40px', height: '40px', border: '4px solid #E2E8F0', borderTopColor: '#4F46E5', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+        <div style={{ width: '40px', height: '40px', border: '4px solid var(--color-border)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
@@ -98,44 +100,48 @@ function LayoutShell({ children }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <LayoutShell>
-          <Routes>
-            {/* Public / Unprotected Route */}
-            <Route path="/login" element={<AuthPage />} />
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <LayoutShell>
+              <Routes>
+                {/* Public / Unprotected Route */}
+                <Route path="/login" element={<AuthPage />} />
 
-            {/* Student Protected Routes */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
-            <Route path="/select-exam-level" element={<ProtectedRoute><SelectExamLevelPage /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/resources" element={<ProtectedRoute><EducationResourcesPage /></ProtectedRoute>} />
-            <Route path="/education-resources" element={<ProtectedRoute><EducationResourcesPage /></ProtectedRoute>} />
-            <Route path="/exams/:levelId" element={<ProtectedRoute><ExamsPage /></ProtectedRoute>} />
-            <Route path="/quizzes" element={<ProtectedRoute><QuizListPage /></ProtectedRoute>} />
-            <Route path="/quiz/:quizId/details" element={<ProtectedRoute><QuizDetailsPage /></ProtectedRoute>} />
-            <Route path="/checkout/:quizId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-            <Route path="/my-quizzes" element={<ProtectedRoute><MyQuizzesPage /></ProtectedRoute>} />
-            <Route path="/quiz/:quizId/instructions" element={<ProtectedRoute><QuizInstructionsPage /></ProtectedRoute>} />
-            <Route path="/quiz/:quizId/attempt" element={<ProtectedRoute><QuizTakingPage /></ProtectedRoute>} />
-            <Route path="/quiz/:quizId/result" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
-            <Route path="/quiz/:quizId/review" element={<ProtectedRoute><AnswerReviewPage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path="/results-history" element={<ProtectedRoute><ResultsHistoryPage /></ProtectedRoute>} />
-            <Route path="/results" element={<ProtectedRoute><ResultsHistoryPage /></ProtectedRoute>} />
-            <Route path="/my-performance" element={<ProtectedRoute><ResultsHistoryPage /></ProtectedRoute>} />
+                {/* Student Protected Routes */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
+                <Route path="/select-exam-level" element={<ProtectedRoute><SelectExamLevelPage /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                <Route path="/resources" element={<ProtectedRoute><EducationResourcesPage /></ProtectedRoute>} />
+                <Route path="/education-resources" element={<ProtectedRoute><EducationResourcesPage /></ProtectedRoute>} />
+                <Route path="/exams/:levelId" element={<ProtectedRoute><ExamsPage /></ProtectedRoute>} />
+                <Route path="/quizzes" element={<ProtectedRoute><QuizListPage /></ProtectedRoute>} />
+                <Route path="/quiz/:quizId/details" element={<ProtectedRoute><QuizDetailsPage /></ProtectedRoute>} />
+                <Route path="/checkout/:quizId" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+                <Route path="/my-quizzes" element={<ProtectedRoute><MyQuizzesPage /></ProtectedRoute>} />
+                <Route path="/quiz/:quizId/instructions" element={<ProtectedRoute><QuizInstructionsPage /></ProtectedRoute>} />
+                <Route path="/quiz/:quizId/attempt" element={<ProtectedRoute><QuizTakingPage /></ProtectedRoute>} />
+                <Route path="/quiz/:quizId/result" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
+                <Route path="/quiz/:quizId/review" element={<ProtectedRoute><AnswerReviewPage /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/results-history" element={<ProtectedRoute><ResultsHistoryPage /></ProtectedRoute>} />
+                <Route path="/results" element={<ProtectedRoute><ResultsHistoryPage /></ProtectedRoute>} />
+                <Route path="/my-performance" element={<ProtectedRoute><ResultsHistoryPage /></ProtectedRoute>} />
 
-            {/* Admin Restricted Routes */}
-            <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-            <Route path="/admin/create-quiz" element={<AdminRoute><AdminQuizWizardPage /></AdminRoute>} />
-            <Route path="/admin/edit-quiz/:quizId" element={<AdminRoute><AdminQuizWizardPage /></AdminRoute>} />
+                {/* Admin Restricted Routes */}
+                <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+                <Route path="/admin/create-quiz" element={<AdminRoute><AdminQuizWizardPage /></AdminRoute>} />
+                <Route path="/admin/edit-quiz/:quizId" element={<AdminRoute><AdminQuizWizardPage /></AdminRoute>} />
 
-            {/* Fallback Catch-All */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </LayoutShell>
-      </BrowserRouter>
-    </AuthProvider>
+                {/* Fallback Catch-All */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </LayoutShell>
+          </BrowserRouter>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

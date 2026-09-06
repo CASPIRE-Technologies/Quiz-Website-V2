@@ -3,11 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Flag, ArrowLeft, ChevronRight, Check } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function QuizTakingPage() {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const { addAttempt } = useAuth();
+  const { t, language } = useLanguage();
 
   const [quiz, setQuiz] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -15,7 +18,7 @@ export default function QuizTakingPage() {
   const [answers, setAnswers] = useState({});
   const [marked, setMarked] = useState({});
   const [timeLeft, setTimeLeft] = useState(2700);
-  const [autosave, setAutosave] = useState('Saved ✓');
+  const [autosave, setAutosave] = useState(null);
 
   useEffect(() => {
     async function loadQuizData() {
@@ -70,8 +73,8 @@ export default function QuizTakingPage() {
       newAns = optIdx;
     }
     setAnswers({ ...answers, [currentIdx]: newAns });
-    setAutosave('Saving...');
-    setTimeout(() => setAutosave('Saved ✓'), 200);
+    setAutosave(t('quiz.saving'));
+    setTimeout(() => setAutosave(t('quiz.autosaved')), 300);
   };
 
   const handleSubmit = async () => {
@@ -117,10 +120,10 @@ export default function QuizTakingPage() {
   return (
     <div style={{ margin: '-24px -24px 0 -24px' }}>
       {/* Quiz Top Header Bar */}
-      <div style={{ height: '68px', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div style={{ height: '68px', backgroundColor: 'var(--color-card-bg)', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', position: 'sticky', top: 0, zIndex: 50 }}>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: 700 }}>{quiz ? quiz.title : 'Loading Examination Paper...'}</div>
-          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Question {currentIdx + 1} of {questions.length}</div>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-main)' }}>{quiz ? quiz.title : t('quiz.loadingPaper')}</div>
+          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{t('quiz.question')} {currentIdx + 1} {t('quiz.of')} {questions.length}</div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', borderRadius: '9999px', fontWeight: 800 }}>
@@ -131,7 +134,7 @@ export default function QuizTakingPage() {
           <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Check size={14} /> {autosave}
           </span>
-          <button className="btn btn-danger btn-sm" style={{ backgroundColor: 'var(--color-error)', color: 'white' }} onClick={handleSubmit}>Submit Quiz</button>
+          <button className="btn btn-danger btn-sm" style={{ backgroundColor: 'var(--color-error)', color: 'white' }} onClick={handleSubmit}>{t('quiz.submitQuiz')}</button>
         </div>
       </div>
 
@@ -140,19 +143,19 @@ export default function QuizTakingPage() {
         <div className="card" style={{ padding: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Question {currentIdx + 1}</span>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>{t('quiz.question')} {currentIdx + 1}</span>
               {isMultiCorrect && (
                 <span className="badge badge-primary" style={{ fontSize: '11px' }}>
-                  Multiple Correct (Select all that apply)
+                  {t('quiz.multipleCorrect')}
                 </span>
               )}
             </div>
             <button className="btn btn-outline btn-sm" onClick={() => setMarked({ ...marked, [currentIdx]: !marked[currentIdx] })}>
-              <Flag size={14} /> {marked[currentIdx] ? 'Marked' : 'Mark for Review'}
+              <Flag size={14} /> {marked[currentIdx] ? t('quiz.marked') : t('quiz.markForReview')}
             </button>
           </div>
 
-          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px', lineHeight: 1.4 }}>{currQ.text}</h3>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px', lineHeight: 1.4, color: 'var(--color-text-main)' }}>{currQ.text}</h3>
 
           {/* Question Image if present */}
           {currQ.hasImage && currQ.imageUrl && (
@@ -161,7 +164,7 @@ export default function QuizTakingPage() {
               borderRadius: '12px',
               overflow: 'hidden',
               border: '1px solid var(--color-border)',
-              backgroundColor: '#F8FAFC',
+              backgroundColor: 'var(--color-bg)',
               maxHeight: '360px',
               display: 'flex',
               alignItems: 'center',
@@ -194,7 +197,7 @@ export default function QuizTakingPage() {
                       padding: '16px 20px',
                       borderRadius: '14px',
                       border: isSel ? '2px solid var(--color-primary)' : '2px solid var(--color-border)',
-                      backgroundColor: isSel ? 'var(--color-primary-light)' : 'white',
+                      backgroundColor: isSel ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
                       cursor: 'pointer',
                       fontWeight: isSel ? 700 : 500,
                       transition: 'all 0.15s ease'
@@ -204,7 +207,7 @@ export default function QuizTakingPage() {
                       width: '32px',
                       height: '32px',
                       borderRadius: isMultiCorrect ? '6px' : '50%',
-                      border: isSel ? '2px solid var(--color-primary)' : '2px solid #CBD5E1',
+                      border: isSel ? '2px solid var(--color-primary)' : '2px solid var(--color-border)',
                       backgroundColor: isSel ? 'var(--color-primary)' : 'transparent',
                       color: isSel ? 'white' : 'var(--color-text-main)',
                       display: 'flex',
@@ -216,7 +219,7 @@ export default function QuizTakingPage() {
                     }}>
                       {isSel && isMultiCorrect ? <Check size={16} /> : String.fromCharCode(65 + oIdx)}
                     </div>
-                    <div style={{ flex: 1 }}>{opt}</div>
+                    <div style={{ flex: 1, color: 'var(--color-text-main)' }}>{opt}</div>
                   </div>
                 );
               })}
@@ -224,7 +227,7 @@ export default function QuizTakingPage() {
           ) : (
             <div style={{ marginBottom: '28px' }}>
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '8px', display: 'block' }}>
-                Your Answer / Notes:
+                {language === 'si' ? 'ඔබේ පිළිතුර / සටහන්:' : 'Your Answer / Notes:'}
               </label>
               <textarea
                 className="form-input"
@@ -232,10 +235,10 @@ export default function QuizTakingPage() {
                 value={answers[currentIdx] || ''}
                 onChange={(e) => {
                   setAnswers({ ...answers, [currentIdx]: e.target.value });
-                  setAutosave('Saving...');
-                  setTimeout(() => setAutosave('Saved ✓'), 200);
+                  setAutosave(t('quiz.saving'));
+                  setTimeout(() => setAutosave(t('quiz.autosaved')), 200);
                 }}
-                placeholder="Type your descriptive solution here..."
+                placeholder={language === 'si' ? 'ඔබගේ පිළිතුර මෙහි ඇතුලත් කරන්න...' : 'Type your descriptive solution here...'}
                 style={{ width: '100%', resize: 'vertical' }}
               />
             </div>
@@ -243,17 +246,17 @@ export default function QuizTakingPage() {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '20px', borderTop: '1px solid var(--color-border)' }}>
             <button className="btn btn-outline" disabled={currentIdx === 0} onClick={() => setCurrentIdx(currentIdx - 1)}>
-              <ArrowLeft size={16} /> Previous
+              <ArrowLeft size={16} /> {t('common.previous')}
             </button>
             <button className="btn btn-primary" onClick={() => currentIdx < questions.length - 1 ? setCurrentIdx(currentIdx + 1) : handleSubmit()}>
-              {currentIdx === questions.length - 1 ? 'Finish & Submit' : 'Next'} <ChevronRight size={16} />
+              {currentIdx === questions.length - 1 ? t('common.finish') : t('common.next')} <ChevronRight size={16} />
             </button>
           </div>
         </div>
 
         {/* Right Palette Sidebar */}
         <div className="card" style={{ height: 'fit-content' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>Question Palette</h4>
+          <h4 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>{t('quiz.questionPalette')}</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
             {questions.map((q, idx) => {
               const ansVal = answers[idx];
@@ -262,7 +265,7 @@ export default function QuizTakingPage() {
               const isCurr = currentIdx === idx;
               let bg = 'var(--color-bg)';
               let color = 'var(--color-text-muted)';
-              if (isMark) { bg = 'var(--color-warning-light)'; color = '#B45309'; }
+              if (isMark) { bg = 'var(--color-warning-light)'; color = 'var(--color-warning)'; }
               else if (isAns) { bg = 'var(--color-success-light)'; color = 'var(--color-success)'; }
 
               return (

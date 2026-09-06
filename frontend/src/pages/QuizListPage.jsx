@@ -7,31 +7,12 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-const EXAM_LEVEL_FILTERS = [
-  { id: 'all', label: 'All Exam Levels' },
-  { id: 'ol', label: 'O/L (Ordinary Level)' },
-  { id: 'al', label: 'A/L (Advanced Level)' },
-  { id: 'scholarship', label: 'Grade 5 Scholarship' }
-];
-
-const DIFFICULTY_FILTERS = [
-  { id: 'all', label: 'All Difficulties' },
-  { id: 'Easy', label: 'Easy' },
-  { id: 'Medium', label: 'Medium' },
-  { id: 'Hard', label: 'Hard' }
-];
-
-const STATUS_FILTERS = [
-  { id: 'all', label: 'All Status' },
-  { id: 'available', label: 'Available to Buy' },
-  { id: 'purchased', label: 'Enrolled / Purchased' },
-  { id: 'completed', label: 'Completed' }
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function QuizListPage() {
   const navigate = useNavigate();
   const { purchases, attempts } = useAuth();
+  const { t } = useLanguage();
 
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +24,27 @@ export default function QuizListPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortBy, setSortBy] = useState('default'); // 'default' | 'price-asc' | 'price-desc' | 'questions' | 'duration'
+
+  const examLevelFilters = useMemo(() => [
+    { id: 'all', label: t('quizzes.allLevels') },
+    { id: 'ol', label: t('quizzes.ol') },
+    { id: 'al', label: t('quizzes.al') },
+    { id: 'scholarship', label: t('quizzes.scholarship') }
+  ], [t]);
+
+  const difficultyFilters = useMemo(() => [
+    { id: 'all', label: t('quizzes.allDifficulties') },
+    { id: 'Easy', label: t('quizzes.easy') },
+    { id: 'Medium', label: t('quizzes.medium') },
+    { id: 'Hard', label: t('quizzes.hard') }
+  ], [t]);
+
+  const statusFilters = useMemo(() => [
+    { id: 'all', label: t('quizzes.allStatus') },
+    { id: 'available', label: t('quizzes.available') },
+    { id: 'purchased', label: t('quizzes.purchased') },
+    { id: 'completed', label: t('quizzes.completed') }
+  ], [t]);
 
   useEffect(() => {
     async function load() {
@@ -146,15 +148,15 @@ export default function QuizListPage() {
       <div style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text-main)' }}>Browse Quizzes</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text-main)' }}>{t('quizzes.title')}</h1>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-              Explore official timed practice papers, unit mocks, and past examinations
+              {t('quizzes.subtitle')}
             </p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="badge badge-primary" style={{ padding: '6px 14px', fontSize: '13px' }}>
-              {filteredQuizzes.length} {filteredQuizzes.length === 1 ? 'Paper Available' : 'Papers Available'}
+              {t('quizzes.papersAvailable', { count: filteredQuizzes.length })}
             </span>
           </div>
         </div>
@@ -175,7 +177,7 @@ export default function QuizListPage() {
             className="form-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search quizzes by paper title, subject, keywords (e.g. Algebra, Physics, Chemistry)..."
+            placeholder={t('quizzes.searchPlaceholder')}
             style={{
               paddingLeft: '44px',
               paddingRight: searchQuery ? '40px' : '16px',
@@ -216,7 +218,7 @@ export default function QuizListPage() {
           paddingBottom: '16px',
           borderBottom: '1px solid var(--color-border)'
         }}>
-          {EXAM_LEVEL_FILTERS.map(lvl => {
+          {examLevelFilters.map(lvl => {
             const isSelected = selectedLevel === lvl.id;
             return (
               <button
@@ -226,7 +228,7 @@ export default function QuizListPage() {
                   padding: '8px 16px',
                   borderRadius: '20px',
                   border: isSelected ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  backgroundColor: isSelected ? 'var(--color-primary-light)' : 'white',
+                  backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
                   color: isSelected ? 'var(--color-primary)' : 'var(--color-text-main)',
                   fontWeight: isSelected ? 700 : 500,
                   fontSize: '13px',
@@ -258,7 +260,7 @@ export default function QuizListPage() {
             
             {/* Subject Filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Subject:</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>{t('quizzes.subject')}</span>
               <select
                 value={selectedSubject}
                 onChange={(e) => setSelectedSubject(e.target.value)}
@@ -268,12 +270,12 @@ export default function QuizListPage() {
                   border: '1px solid var(--color-border)',
                   fontSize: '13px',
                   fontWeight: 600,
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--color-card-bg)',
                   color: 'var(--color-text-main)',
                   cursor: 'pointer'
                 }}
               >
-                <option value="all">All Subjects</option>
+                <option value="all">{t('quizzes.allSubjects')}</option>
                 {availableSubjects.filter(s => s !== 'all').map(subj => (
                   <option key={subj} value={subj}>{subj}</option>
                 ))}
@@ -282,7 +284,7 @@ export default function QuizListPage() {
 
             {/* Difficulty Filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Difficulty:</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>{t('quizzes.difficulty')}</span>
               <select
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
@@ -292,12 +294,12 @@ export default function QuizListPage() {
                   border: '1px solid var(--color-border)',
                   fontSize: '13px',
                   fontWeight: 600,
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--color-card-bg)',
                   color: 'var(--color-text-main)',
                   cursor: 'pointer'
                 }}
               >
-                {DIFFICULTY_FILTERS.map(d => (
+                {difficultyFilters.map(d => (
                   <option key={d.id} value={d.id}>{d.label}</option>
                 ))}
               </select>
@@ -305,7 +307,7 @@ export default function QuizListPage() {
 
             {/* Status Filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Status:</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>{t('quizzes.status')}</span>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
@@ -315,12 +317,12 @@ export default function QuizListPage() {
                   border: '1px solid var(--color-border)',
                   fontSize: '13px',
                   fontWeight: 600,
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--color-card-bg)',
                   color: 'var(--color-text-main)',
                   cursor: 'pointer'
                 }}
               >
-                {STATUS_FILTERS.map(s => (
+                {statusFilters.map(s => (
                   <option key={s.id} value={s.id}>{s.label}</option>
                 ))}
               </select>
@@ -331,7 +333,7 @@ export default function QuizListPage() {
           {/* Right side: Sort By & Reset */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Sort By:</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>{t('quizzes.sortBy')}</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -341,16 +343,16 @@ export default function QuizListPage() {
                   border: '1px solid var(--color-border)',
                   fontSize: '13px',
                   fontWeight: 600,
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--color-card-bg)',
                   color: 'var(--color-text-main)',
                   cursor: 'pointer'
                 }}
               >
-                <option value="default">Default / Recommended</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="questions">Most Questions</option>
-                <option value="duration">Shortest Duration</option>
+                <option value="default">{t('quizzes.sortDefault')}</option>
+                <option value="price-asc">{t('quizzes.sortPriceAsc')}</option>
+                <option value="price-desc">{t('quizzes.sortPriceDesc')}</option>
+                <option value="questions">{t('quizzes.sortQuestions')}</option>
+                <option value="duration">{t('quizzes.sortDuration')}</option>
               </select>
             </div>
 
@@ -368,7 +370,7 @@ export default function QuizListPage() {
                   cursor: 'pointer'
                 }}
               >
-                Reset Filters
+                {t('quizzes.resetFilters')}
               </button>
             )}
           </div>
@@ -379,29 +381,29 @@ export default function QuizListPage() {
       {/* QUIZ PAPERS GRID */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-muted)' }}>
-          <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Loading Examination Papers...</div>
+          <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>{t('quizzes.loadingPapers')}</div>
         </div>
       ) : filteredQuizzes.length === 0 ? (
         <div style={{
           textAlign: 'center',
           padding: '60px 24px',
-          backgroundColor: 'white',
+          backgroundColor: 'var(--color-card-bg)',
           borderRadius: '16px',
           border: '1px dashed var(--color-border)'
         }}>
           <Search size={48} color="var(--color-text-muted)" style={{ margin: '0 auto 16px auto', opacity: 0.4 }} />
           <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '8px' }}>
-            No Quizzes Match Your Search
+            {t('quizzes.noMatchTitle')}
           </h3>
           <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', maxWidth: '420px', margin: '0 auto 20px auto' }}>
-            We couldn't find any examination papers matching your active filters. Try searching with different keywords or clearing filters.
+            {t('quizzes.noMatchDesc')}
           </p>
           <button
             className="btn btn-primary"
             onClick={handleResetFilters}
             style={{ fontSize: '13px', padding: '10px 20px' }}
           >
-            Clear All Filters
+            {t('quizzes.clearFilters')}
           </button>
         </div>
       ) : (
@@ -417,9 +419,9 @@ export default function QuizListPage() {
 
             // Difficulty color helper
             const getDifficultyStyle = (diff) => {
-              if (diff === 'Easy') return { bg: '#DCFCE7', text: '#16A34A' };
-              if (diff === 'Hard') return { bg: '#FEE2E2', text: '#EF4444' };
-              return { bg: '#FEF3C7', text: '#D97706' };
+              if (diff === 'Easy') return { bg: 'var(--color-success-light)', text: 'var(--color-success)' };
+              if (diff === 'Hard') return { bg: 'var(--color-error-light)', text: 'var(--color-error)' };
+              return { bg: 'var(--color-warning-light)', text: '#D97706' };
             };
             const diffStyle = getDifficultyStyle(quiz.difficulty);
 
@@ -436,9 +438,10 @@ export default function QuizListPage() {
                   justifyContent: 'space-between',
                   padding: '22px',
                   borderRadius: '16px',
-                  border: isPurchased ? '1.5px solid #BFDBFE' : '1px solid var(--color-border)',
-                  backgroundColor: isPurchased ? '#F8FAFC' : 'white',
-                  position: 'relative'
+                  border: isPurchased ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-card-bg)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
               >
                 <div>
@@ -463,11 +466,11 @@ export default function QuizListPage() {
 
                     {isCompleted ? (
                       <span className="badge badge-success" style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                        <CheckCircle2 size={12} /> Score: {completedScore}%
+                        <CheckCircle2 size={12} /> {t('quizzes.scoreBadge')} {completedScore}%
                       </span>
                     ) : isPurchased ? (
-                      <span className="badge" style={{ backgroundColor: '#DCFCE7', color: '#15803D', fontSize: '11px' }}>
-                        Enrolled
+                      <span className="badge badge-primary" style={{ fontSize: '11px' }}>
+                        {t('quizzes.enrolledBadge')}
                       </span>
                     ) : null}
                   </div>
@@ -516,14 +519,15 @@ export default function QuizListPage() {
                     color: 'var(--color-text-muted)',
                     marginBottom: '16px',
                     padding: '8px 12px',
-                    backgroundColor: 'rgba(241, 245, 249, 0.6)',
+                    backgroundColor: 'var(--color-bg)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: '8px'
                   }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                      <FileText size={14} /> {quiz.questionCount || quiz.questions?.length || 30} Qs
+                      <FileText size={14} /> {quiz.questionCount || quiz.questions?.length || 30} {t('quizzes.qs')}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                      <Clock size={14} /> {quiz.durationMinutes || 45} Mins
+                      <Clock size={14} /> {quiz.durationMinutes || 45} {t('quizzes.mins')}
                     </span>
                     {quiz.rating && (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 700, color: '#D97706', marginLeft: 'auto' }}>
@@ -539,10 +543,12 @@ export default function QuizListPage() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   paddingTop: '16px',
-                  borderTop: '1px solid var(--color-border)'
+                  borderTop: '1px solid var(--color-border)',
+                  flexWrap: 'wrap',
+                  gap: '8px'
                 }}>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block' }}>Fee</span>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block' }}>{t('quizzes.fee')}</span>
                     <span style={{ fontSize: '19px', fontWeight: 800, color: 'var(--color-text-main)' }}>
                       LKR {quiz.price || 300}
                     </span>
@@ -554,7 +560,7 @@ export default function QuizListPage() {
                       onClick={() => navigate(`/quiz/${quiz.id}/details`)}
                       style={{ fontWeight: 700, fontSize: '13px', padding: '8px 14px' }}
                     >
-                      View Results
+                      {t('common.viewResults')}
                     </button>
                   ) : isPurchased ? (
                     <button
@@ -568,7 +574,7 @@ export default function QuizListPage() {
                       }}
                       onClick={() => navigate(`/quiz/${quiz.id}/details`)}
                     >
-                      Start Quiz
+                      {t('quizzes.startQuiz')}
                     </button>
                   ) : (
                     <button
@@ -576,7 +582,7 @@ export default function QuizListPage() {
                       onClick={() => navigate(`/quiz/${quiz.id}/details`)}
                       style={{ fontWeight: 700, fontSize: '13px', padding: '8px 16px' }}
                     >
-                      Buy Quiz
+                      {t('quizzes.buyQuiz')}
                     </button>
                   )}
                 </div>

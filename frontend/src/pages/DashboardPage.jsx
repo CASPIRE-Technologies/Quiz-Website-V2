@@ -6,19 +6,14 @@ import {
   BarChart3, Award, GraduationCap, Calendar
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ───── Helpers ───── */
-function getGreeting() {
+function getGreetingKey() {
   const h = new Date().getHours();
-  if (h < 12) return { text: 'Good Morning', emoji: '🌅' };
-  if (h < 17) return { text: 'Good Afternoon', emoji: '☀️' };
-  return { text: 'Good Evening', emoji: '🌙' };
-}
-
-function getFormattedDate() {
-  return new Date().toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
+  if (h < 12) return { key: 'dashboard.goodMorning', emoji: '🌅' };
+  if (h < 17) return { key: 'dashboard.goodAfternoon', emoji: '☀️' };
+  return { key: 'dashboard.goodEvening', emoji: '🌙' };
 }
 
 function AnimatedNumber({ value, suffix = '' }) {
@@ -43,14 +38,18 @@ function AnimatedNumber({ value, suffix = '' }) {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, purchases, attempts } = useAuth();
+  const { t, language } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     requestAnimationFrame(() => setMounted(true));
   }, []);
 
-  const greeting = getGreeting();
-  const formattedDate = getFormattedDate();
+  const greetingInfo = getGreetingKey();
+  const greetingText = t(greetingInfo.key);
+  const formattedDate = new Date().toLocaleDateString(language === 'si' ? 'si-LK' : 'en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
 
   /* ── Computed stats ── */
   const stats = useMemo(() => {
@@ -64,9 +63,9 @@ export default function DashboardPage() {
   }, [attempts, purchases]);
 
   const examLevels = [
-    { id: 'g5', title: 'Grade 5 Scholarship', badge: 'Primary Level', icon: '🎒', desc: 'IQ & General Knowledge', gradient: 'linear-gradient(135deg, #fbbf24, #f59e0b)', shadowColor: 'rgba(251, 191, 36, 0.3)' },
-    { id: 'ol', title: 'G.C.E. Ordinary Level', badge: 'Secondary Level', icon: '📘', desc: 'Core subjects & model papers', gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)', shadowColor: 'rgba(59, 130, 246, 0.3)' },
-    { id: 'al', title: 'G.C.E. Advanced Level', badge: 'Senior Level', icon: '🎓', desc: 'Stream-specific past papers', gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', shadowColor: 'rgba(139, 92, 246, 0.3)' }
+    { id: 'g5', title: t('exam.grade5'), badge: t('exam.grade5Badge'), icon: '🎒', desc: t('exam.grade5Desc'), gradient: 'linear-gradient(135deg, #fbbf24, #f59e0b)', shadowColor: 'rgba(251, 191, 36, 0.3)' },
+    { id: 'ol', title: t('exam.ol'), badge: t('exam.olBadge'), icon: '📘', desc: t('exam.olDesc'), gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)', shadowColor: 'rgba(59, 130, 246, 0.3)' },
+    { id: 'al', title: t('exam.al'), badge: t('exam.alBadge'), icon: '🎓', desc: t('exam.alDesc'), gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', shadowColor: 'rgba(139, 92, 246, 0.3)' }
   ];
 
   const isMatchingLevel = (examId, userExamLevel) => {
@@ -112,10 +111,10 @@ export default function DashboardPage() {
               <Calendar size={14} /> {formattedDate}
             </div>
             <h1 style={{ fontSize: '30px', fontWeight: 800, lineHeight: 1.25, margin: 0 }}>
-              {greeting.text}, {user?.name?.split(' ')[0] || 'Student'} {greeting.emoji}
+              {greetingText}, {user?.name?.split(' ')[0] || 'Student'} {greetingInfo.emoji}
             </h1>
             <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.6)', marginTop: '8px', maxWidth: '420px', lineHeight: 1.5, fontWeight: 400 }}>
-              Stay consistent. Every quiz brings you closer to your goal. Let's make today count!
+              {t('dashboard.subtitle')}
             </p>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
@@ -135,7 +134,7 @@ export default function DashboardPage() {
                   transition: 'all 0.25s ease',
                 }}
               >
-                <Zap size={15} /> Start a Quiz
+                <Zap size={15} /> {t('common.startQuiz')}
               </button>
               <button
                 className="btn"
@@ -153,7 +152,7 @@ export default function DashboardPage() {
                   transition: 'all 0.25s ease',
                 }}
               >
-                <BookOpen size={15} /> Browse Papers
+                <BookOpen size={15} /> {t('dashboard.browseAll')}
               </button>
               <button
                 className="btn"
@@ -174,7 +173,7 @@ export default function DashboardPage() {
                   gap: '6px',
                 }}
               >
-                <Award size={15} /> My Performance
+                <Award size={15} /> {t('nav.performance')}
               </button>
             </div>
           </div>
@@ -194,7 +193,7 @@ export default function DashboardPage() {
               <div style={{ fontSize: '32px', fontWeight: 900, lineHeight: 1 }}>
                 <AnimatedNumber value={stats.streak} />
               </div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: '4px' }}>Day Streak 🔥</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: '4px' }}>{t('dashboard.streak')} 🔥</div>
             </div>
           )}
         </div>
@@ -208,10 +207,10 @@ export default function DashboardPage() {
         marginBottom: '28px',
       }}>
         {[
-          { label: 'Quizzes Taken', value: stats.totalQuizzes, icon: Target, color: '#3b82f6', bgColor: '#eff6ff', borderColor: '#bfdbfe' },
-          { label: 'Average Score', value: stats.avgScore, suffix: '%', icon: TrendingUp, color: '#10b981', bgColor: '#ecfdf5', borderColor: '#a7f3d0' },
-          { label: 'Papers Purchased', value: stats.totalPurchased, icon: BookOpen, color: '#8b5cf6', bgColor: '#f5f3ff', borderColor: '#ddd6fe' },
-          { label: 'Current Streak', value: stats.streak, icon: Flame, color: '#f97316', bgColor: '#fff7ed', borderColor: '#fed7aa' },
+          { label: t('dashboard.totalQuizzes'), value: stats.totalQuizzes, icon: Target, color: '#3b82f6', bgColor: 'var(--color-primary-light)', borderColor: 'var(--color-border)' },
+          { label: t('dashboard.avgScore'), value: stats.avgScore, suffix: '%', icon: TrendingUp, color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.15)', borderColor: 'var(--color-border)' },
+          { label: t('dashboard.quizzesPurchased'), value: stats.totalPurchased, icon: BookOpen, color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.15)', borderColor: 'var(--color-border)' },
+          { label: t('dashboard.streak'), value: stats.streak, icon: Flame, color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', borderColor: 'var(--color-border)' },
         ].map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -262,7 +261,7 @@ export default function DashboardPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <GraduationCap size={20} color="var(--color-primary)" /> Choose Your Exam
+              <GraduationCap size={20} color="var(--color-primary)" /> {t('dashboard.selectExamStream')}
             </h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -280,7 +279,7 @@ export default function DashboardPage() {
                     padding: '20px',
                     borderRadius: '16px',
                     border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                    backgroundColor: isSelected ? '#EFF6FF' : 'var(--color-card-bg)',
+                    backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-card-bg)',
                     cursor: 'pointer',
                     position: 'relative',
                     overflow: 'hidden',
@@ -311,7 +310,7 @@ export default function DashboardPage() {
                           backgroundColor: 'var(--color-primary)', color: 'white',
                           padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: 700,
                         }}>
-                          <CheckCircle2 size={10} /> Your Stream
+                          <CheckCircle2 size={10} /> {t('exam.selected')}
                         </span>
                       )}
                     </div>
@@ -336,7 +335,7 @@ export default function DashboardPage() {
             boxShadow: 'var(--shadow-sm)',
           }}>
             <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BarChart3 size={17} color="var(--color-primary)" /> Performance
+              <BarChart3 size={17} color="var(--color-primary)" /> {t('nav.performance')}
             </h3>
 
             {/* Circular progress indicator */}
@@ -346,7 +345,7 @@ export default function DashboardPage() {
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke="#e2e8f0"
+                    stroke="var(--color-border)"
                     strokeWidth="3"
                   />
                   <path
@@ -378,17 +377,17 @@ export default function DashboardPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Quizzes Taken</span>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>{t('dashboard.totalQuizzes')}</span>
                   <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--color-text-main)' }}>{stats.totalQuizzes}</span>
                 </div>
                 <div style={{ height: '1px', background: 'var(--color-border)' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Purchased</span>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>{t('dashboard.quizzesPurchased')}</span>
                   <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--color-text-main)' }}>{stats.totalPurchased}</span>
                 </div>
                 <div style={{ height: '1px', background: 'var(--color-border)' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Streak</span>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>{t('dashboard.streak')}</span>
                   <span style={{ fontSize: '14px', fontWeight: 800, color: '#f97316' }}>{stats.streak} 🔥</span>
                 </div>
               </div>
@@ -416,10 +415,16 @@ export default function DashboardPage() {
             <div style={{ position: 'relative', zIndex: 2 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <Sparkles size={16} />
-                <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>Daily Challenge</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>
+                  {t('dashboard.dailyChallenge')}
+                </span>
               </div>
-              <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px 0', lineHeight: 1.3 }}>Ready for Today's Quiz?</h3>
-              <p style={{ fontSize: '13px', opacity: 0.7, margin: '0 0 16px 0', fontWeight: 400 }}>Test your knowledge with curated questions</p>
+              <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px 0', lineHeight: 1.3 }}>
+                {t('dashboard.readyToday')}
+              </h3>
+              <p style={{ fontSize: '13px', opacity: 0.7, margin: '0 0 16px 0', fontWeight: 400 }}>
+                {t('dashboard.testKnowledge')}
+              </p>
               <button style={{
                 background: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(8px)',
@@ -436,7 +441,7 @@ export default function DashboardPage() {
                 transition: 'all 0.2s ease',
                 fontFamily: 'inherit',
               }}>
-                Start Challenge <ArrowRight size={14} />
+                {t('dashboard.startChallenge')} <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -452,7 +457,7 @@ export default function DashboardPage() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Clock size={16} color="var(--color-text-muted)" /> Recent Activity
+                  <Clock size={16} color="var(--color-text-muted)" /> {t('dashboard.recentAttempts')}
                 </h3>
                 <button
                   onClick={() => navigate('/results-history')}
@@ -469,7 +474,7 @@ export default function DashboardPage() {
                     padding: '2px 6px',
                   }}
                 >
-                  View All <ArrowRight size={13} />
+                  {t('common.all')} <ArrowRight size={13} />
                 </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -515,10 +520,10 @@ export default function DashboardPage() {
 
       {/* ═══ CONTINUE LEARNING BANNER ═══ */}
       <div style={{
-        background: 'linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #ede9fe 100%)',
+        background: 'linear-gradient(135deg, var(--color-card-bg) 0%, var(--color-primary-light) 100%)',
         borderRadius: '18px',
         padding: '24px 28px',
-        border: '1px solid var(--color-primary-border)',
+        border: '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -537,10 +542,14 @@ export default function DashboardPage() {
           </div>
           <div>
             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-warning)', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-              Continue Learning
+              {t('dashboard.continueLearning')}
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: 'var(--color-text-main)' }}>Pick up where you left off</h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: '2px 0 0 0', fontWeight: 400 }}>Resume your recent quizzes and keep improving</p>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: 'var(--color-text-main)' }}>
+              {t('dashboard.pickUp')}
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: '2px 0 0 0', fontWeight: 400 }}>
+              {t('dashboard.resumeMsg')}
+            </p>
           </div>
         </div>
         <button
@@ -559,7 +568,7 @@ export default function DashboardPage() {
             boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
           }}
         >
-          My Quizzes <ArrowRight size={14} />
+          {t('dashboard.myQuizzesBtn')} <ArrowRight size={14} />
         </button>
       </div>
 
