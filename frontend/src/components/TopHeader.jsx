@@ -142,11 +142,12 @@ export default function TopHeader() {
           justifyContent: "space-between",
           padding: "0 24px",
           zIndex: 200,
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-          background: "rgba(255, 255, 255, 0)",
-          borderRadius: "16px",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          boxShadow: isDark ? "0 4px 30px rgba(0, 0, 0, 0.1)" : "0 4px 30px rgba(0, 0, 0, 0.27)",
+          background: isDark ? "rgba(18, 29, 40, 0.1)" :  "#ffff",
+          borderRadius: isDark ? "0 0 16px 16px" : "16px",
+          backdropFilter: isDark ? "blur(20px)" : "",
+          WebkitBackdropFilter: isDark ? "blur(20px)" : "",
+          border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "none",
         }}
       >
         {/* ── Left Section: Hamburger + Brand ── */}
