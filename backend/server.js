@@ -17,7 +17,8 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // API Health Check
 app.get('/api/health', (req, res) => {
@@ -36,7 +37,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Connect to MongoDB and Start Server
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`=============================================================`);
   console.log(`🚀 EduQuiz Pro API Server running on port ${PORT}`);
   console.log(`🔗 API Base Endpoint: http://localhost:${PORT}/api`);
@@ -45,5 +46,14 @@ app.listen(PORT, async () => {
     await connectDB();
   } catch (err) {
     console.error('Failed to initialize MongoDB connection on startup:', err.message);
+  }
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n❌ Port ${PORT} is currently in use by another process.`);
+    console.error(`💡 Tip: Close any other terminal running the server, or free port ${PORT}.\n`);
+  } else {
+    console.error('Server error:', err);
   }
 });

@@ -1,103 +1,125 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 
 const AuthContext = createContext();
 
-function getStoredUserDatabase() {
-  const stored = localStorage.getItem('eduquiz_registered_users_v2');
-  if (stored) {
-    try { return JSON.parse(stored); } catch (e) {}
+// Helper: Safe JSON parsing for localStorage
+function safeJSONParse(key, fallback) {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch (e) {
+    console.error(`Error reading ${key} from localStorage`, e);
+    return fallback;
   }
-  return [];
 }
 
 function getUserKey(user) {
   if (!user) return null;
-  return user.id || user.email || 'guest';
-}
-
-function getStoredAttemptsForUser(userKey) {
-  if (!userKey) return {};
-  const stored = localStorage.getItem(`eduquiz_attempts_${userKey}`);
-  if (stored) {
-    try { return JSON.parse(stored); } catch (e) {}
-  }
-  return {};
-}
-
-function getStoredPurchasesForUser(userKey) {
-  if (!userKey) return [];
-  const stored = localStorage.getItem(`eduquiz_purchases_${userKey}`);
-  if (stored) {
-    try { return JSON.parse(stored); } catch (e) {}
-  }
-  return [];
+  return user.id || user._id || user.email || 'guest';
 }
 
 export const AuthProvider = ({ children }) => {
-  const [usersDb, setUsersDb] = useState(getStoredUserDatabase);
+  const [usersDb, setUsersDb] = useState(() => safeJSONParse('eduquiz_registered_users_v2', []));
+  const [user, setUser] = useState(() => safeJSONParse('eduquiz_user', null));
+  const [token, setToken] = useState(() => localStorage.getItem('eduquiz_token') || null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Active user session (null if not logged in)
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('eduquiz_user');
-    return stored ? JSON.parse(stored) : null;
-  });
+  const userKey = getUserKey(user);
 
-  const [purchases, setPurchases] = useState(() => {
-    const storedUser = localStorage.getItem('eduquiz_user');
-    const u = storedUser ? JSON.parse(storedUser) : null;
-    return getStoredPurchasesForUser(getUserKey(u));
-  });
+  const [purchases, setPurchases] = useState(() => 
+    userKey ? safeJSONParse(`eduquiz_purchases_${userKey}`, []) : []
+  );
 
-  const [attempts, setAttempts] = useState(() => {
-    const storedUser = localStorage.getItem('eduquiz_user');
-    const u = storedUser ? JSON.parse(storedUser) : null;
-    return getStoredAttemptsForUser(getUserKey(u));
-  });
+  const [attempts, setAttempts] = useState(() => 
+    userKey ? safeJSONParse(`eduquiz_attempts_${userKey}`, {}) : {}
+  );
 
-  // Re-sync user-scoped purchases and attempts whenever active user changes
+  // Sync user-scoped storage state when user changes
   useEffect(() => {
     const key = getUserKey(user);
-    setAttempts(getStoredAttemptsForUser(key));
-    setPurchases(getStoredPurchasesForUser(key));
-  }, [user?.email, user?.id]);
+    if (key) {
+      setAttempts(safeJSONParse(`eduquiz_attempts_${key}`, {}));
+      setPurchases(safeJSONParse(`eduquiz_purchases_${key}`, []));
+    } else {
+      setAttempts({});
+      setPurchases([]);
+    }
+  }, [user?.email, user?.id, user?._id]);
 
-  const saveAuthSession = (newUser, token) => {
-    if (token) {
-      localStorage.setItem('eduquiz_token', token);
+  // Initial Auth Check on Application Boot
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem('eduquiz_token');
+      if (storedToken) {
+        try {
+          const res = await api.getProfile();
+          if (res && res.success && res.user) {
+            setUser(res.user);
+            localStorage.setItem('eduquiz_user', JSON.stringify(res.user));
+          }
+        } catch (err) {
+          console.warn('Session verification failed, logging out.');
+          logoutUser();
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+  }, []);
+
+  const saveAuthSession = useCallback((newUser, newToken) => {
+    if (newToken) {
+      setToken(newToken);
+      localStorage.setItem('eduquiz_token', newToken);
     }
     setUser(newUser);
     localStorage.setItem('eduquiz_user', JSON.stringify(newUser));
 
-    const db = getStoredUserDatabase();
-    const updatedDb = [newUser, ...db.filter(u => u.email !== newUser.email)];
-    setUsersDb(updatedDb);
-    localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
-  };
+    setUsersDb((prevDb) => {
+      const updatedDb = [newUser, ...prevDb.filter((u) => u.email !== newUser.email)];
+      localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
+      return updatedDb;
+    });
+  }, []);
 
   const registerAccount = async (newUserData) => {
-    const { user: newUser, token } = await api.register(newUserData);
-    saveAuthSession(newUser, token);
-    return newUser;
+    const payload = {
+      examLevel: 'G.C.E. Ordinary Level (O/L)',
+      ...newUserData
+    };
+    const res = await api.register(payload);
+    if (res && res.user) {
+      saveAuthSession(res.user, res.token);
+      return res.user;
+    }
+    throw new Error(res?.message || 'Registration failed');
   };
 
   const loginUser = async (loginData) => {
     const inputEmail = (loginData.email || '').toLowerCase().trim();
     const inputPassword = (loginData.password || '').trim();
 
-    const { user: found, token } = await api.login({
+    const res = await api.login({
       email: inputEmail,
       password: inputPassword
     });
 
-    saveAuthSession(found, token);
-    return found;
+    if (res && res.user) {
+      saveAuthSession(res.user, res.token);
+      return res.user;
+    }
+    throw new Error(res?.message || 'Login failed');
   };
 
   const googleLoginUser = async (googlePayload) => {
-    const { user: found, token } = await api.googleLogin(googlePayload);
-    saveAuthSession(found, token);
-    return found;
+    const res = await api.googleLogin(googlePayload);
+    if (res && res.user) {
+      saveAuthSession(res.user, res.token);
+      return res.user;
+    }
+    throw new Error(res?.message || 'Google Authentication failed');
   };
 
   const updateUserExamLevel = async (examLevel) => {
@@ -106,10 +128,11 @@ export const AuthProvider = ({ children }) => {
     setUser(updatedUser);
     localStorage.setItem('eduquiz_user', JSON.stringify(updatedUser));
 
-    const db = getStoredUserDatabase();
-    const updatedDb = db.map(u => u.email === user.email ? { ...u, examLevel } : u);
-    setUsersDb(updatedDb);
-    localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
+    setUsersDb((prevDb) => {
+      const updatedDb = prevDb.map((u) => (u.email === user.email ? { ...u, examLevel } : u));
+      localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
+      return updatedDb;
+    });
 
     await api.updateExamLevel(user.email, examLevel);
     return updatedUser;
@@ -121,10 +144,11 @@ export const AuthProvider = ({ children }) => {
     setUser(mergedUser);
     localStorage.setItem('eduquiz_user', JSON.stringify(mergedUser));
 
-    const db = getStoredUserDatabase();
-    const updatedDb = db.map(u => u.email === user.email ? { ...u, ...updatedFields } : u);
-    setUsersDb(updatedDb);
-    localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
+    setUsersDb((prevDb) => {
+      const updatedDb = prevDb.map((u) => (u.email === user.email ? { ...u, ...updatedFields } : u));
+      localStorage.setItem('eduquiz_registered_users_v2', JSON.stringify(updatedDb));
+      return updatedDb;
+    });
 
     const res = await api.updateProfile(updatedFields);
     if (res && res.success && res.user) {
@@ -136,13 +160,15 @@ export const AuthProvider = ({ children }) => {
     return mergedUser;
   };
 
-  const logoutUser = () => {
+  const logoutUser = useCallback(() => {
     setUser(null);
+    setToken(null);
     setAttempts({});
     setPurchases([]);
     localStorage.removeItem('eduquiz_user');
     localStorage.removeItem('eduquiz_token');
-  };
+    sessionStorage.removeItem('eduquiz_new_registration');
+  }, []);
 
   const addPurchase = (quizId) => {
     if (!purchases.includes(quizId)) {
@@ -165,7 +191,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, usersDb, registerAccount, loginUser, googleLoginUser, updateUserExamLevel, updateUserProfile, logoutUser, purchases, addPurchase, attempts, addAttempt }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        usersDb,
+        isLoading,
+        registerAccount,
+        loginUser,
+        googleLoginUser,
+        updateUserExamLevel,
+        updateUserProfile,
+        logoutUser,
+        purchases,
+        addPurchase,
+        attempts,
+        addAttempt
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

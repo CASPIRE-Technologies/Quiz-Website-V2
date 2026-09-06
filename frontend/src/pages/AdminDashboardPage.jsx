@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut, BarChart3, CreditCard, Menu, X, ChevronRight } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle, TrendingUp, Users, BookOpen, DollarSign, Lock, ShieldCheck, LogOut, BarChart3, CreditCard, Menu, X, ChevronRight, HelpCircle, Image as ImageIcon, Upload, Check, AlertCircle, Eye, Sparkles, FileText, Layers } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
 
 /* ── inline style objects (kept out of JSX for readability) ── */
 
@@ -114,6 +115,34 @@ export default function AdminDashboardPage() {
 
   const [dbUsers, setDbUsers] = useState([]);
 
+  // Question Management State
+  const [questionsList, setQuestionsList] = useState([]);
+  const [questionSearch, setQuestionSearch] = useState('');
+  const [questionTypeFilter, setQuestionTypeFilter] = useState('all');
+  const [showQuestionForm, setShowQuestionForm] = useState(true);
+
+  // Question Form Fields State
+  const [qText, setQText] = useState('');
+  const [isMultipleChoice, setIsMultipleChoice] = useState(false);
+  const [options, setOptions] = useState([
+    { letter: 'A', text: '' },
+    { letter: 'B', text: '' },
+    { letter: 'C', text: '' },
+    { letter: 'D', text: '' }
+  ]);
+  const [correctIndex, setCorrectIndex] = useState(null);
+  const [correctIndices, setCorrectIndices] = useState([]);
+  const [hasImage, setHasImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFileName, setImageFileName] = useState('');
+  const [qSubject, setQSubject] = useState('Mathematics');
+  const [qExamLevel, setQExamLevel] = useState('ol');
+  const [qExplanation, setQExplanation] = useState('');
+  const [qFormError, setQFormError] = useState('');
+  const [qFormSuccess, setQFormSuccess] = useState('');
+  const [isSavingQuestion, setIsSavingQuestion] = useState(false);
+  const fileInputRef = useRef(null);
+
   const mockStudentsList = [
     { id: 'usr-01', name: 'Kasun Perera', email: 'kasun.perera@student.lk', phone: '+94 77 123 4567', examLevel: 'G.C.E. O/L', purchased: 3, completed: 2, joined: '2026-08-10', status: 'Active' },
     { id: 'usr-02', name: 'Dilani Fernando', email: 'dilani.f@gmail.com', phone: '+94 71 888 2211', examLevel: 'G.C.E. A/L (Physical)', purchased: 5, completed: 4, joined: '2026-08-12', status: 'Active' },
@@ -154,6 +183,9 @@ export default function AdminDashboardPage() {
 
       const usersRes = await api.getAdminUsers();
       if (usersRes.users) setDbUsers(usersRes.users);
+
+      const qRes = await api.getQuestions();
+      if (qRes.questions) setQuestionsList(qRes.questions);
     }
     loadData();
   }, []);
@@ -182,6 +214,7 @@ export default function AdminDashboardPage() {
   // Tab definitions with icons and counts
   const navTabs = [
     { key: 'quizzes', label: 'Quiz Management', icon: BookOpen, count: quizzesList?.length || 0 },
+    { key: 'questions', label: 'Questions', icon: HelpCircle, count: questionsList?.length || 0 },
     { key: 'students', label: 'Students', icon: Users, count: displayStudentsList?.length || 0 },
     { key: 'payments', label: 'Payments', icon: CreditCard, count: paymentsList?.length || 0 },
     { key: 'analytics', label: 'Analytics', icon: BarChart3, count: null },
@@ -269,7 +302,204 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Question Management Handlers
+  const handleOptionChange = (idx, val) => {
+    const updated = [...options];
+    updated[idx].text = val;
+    setOptions(updated);
+    setQFormError('');
+  };
+
+  const handleAddOption = () => {
+    if (options.length >= 8) return;
+    const nextLetter = String.fromCharCode(65 + options.length);
+    setOptions([...options, { letter: nextLetter, text: '' }]);
+  };
+
+  const handleRemoveOption = (idx) => {
+    if (options.length <= 2) {
+      setQFormError('A Multiple Choice question must have at least 2 options.');
+      return;
+    }
+    const filtered = options.filter((_, i) => i !== idx);
+    const reindexed = filtered.map((opt, i) => ({
+      ...opt,
+      letter: String.fromCharCode(65 + i)
+    }));
+    setOptions(reindexed);
+    const nextCorrect = correctIndices
+      .filter(i => i !== idx)
+      .map(i => (i > idx ? i - 1 : i));
+    setCorrectIndices(nextCorrect);
+    setCorrectIndex(nextCorrect.length > 0 ? nextCorrect[0] : null);
+    setQFormError('');
+  };
+
+  const handleToggleCorrectOption = (idx) => {
+    let next;
+    if (correctIndices.includes(idx)) {
+      next = correctIndices.filter(i => i !== idx);
+    } else {
+      next = [...correctIndices, idx].sort((a, b) => a - b);
+    }
+    setCorrectIndices(next);
+    setCorrectIndex(next.length > 0 ? next[0] : null);
+    setQFormError('');
+  };
+
+  const handleImageFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setQFormError('Please select a valid image file (PNG, JPG, JPEG, WEBP, etc.).');
+      return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+      setQFormError('Image size exceeds 15MB. Please choose a smaller image.');
+      return;
+    }
+
+    setImageFileName(file.name);
+    setQFormError('');
+
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      setImagePreview(uploadEvent.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setImageFileName('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleResetForm = () => {
+    setQText('');
+    setIsMultipleChoice(false);
+    setOptions([
+      { letter: 'A', text: '' },
+      { letter: 'B', text: '' },
+      { letter: 'C', text: '' },
+      { letter: 'D', text: '' }
+    ]);
+    setCorrectIndex(null);
+    setCorrectIndices([]);
+    setHasImage(false);
+    setImagePreview(null);
+    setImageFileName('');
+    setQSubject('Mathematics');
+    setQExamLevel('ol');
+    setQExplanation('');
+    setQFormError('');
+    setQFormSuccess('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSaveQuestion = async (e) => {
+    if (e) e.preventDefault();
+    setQFormError('');
+    setQFormSuccess('');
+
+    const cleanText = qText.trim();
+    if (!cleanText) {
+      setQFormError('Please enter the question text before saving.');
+      return;
+    }
+
+    if (isMultipleChoice) {
+      if (options.length < 2) {
+        setQFormError('Multiple Choice questions must include at least 2 options.');
+        return;
+      }
+      for (let i = 0; i < options.length; i++) {
+        if (!options[i].text.trim()) {
+          setQFormError(`Please enter text for Option ${options[i].letter}.`);
+          return;
+        }
+      }
+      if (correctIndices.length === 0) {
+        setQFormError('Please select at least one correct answer using the checkboxes.');
+        return;
+      }
+    }
+
+    setIsSavingQuestion(true);
+
+    try {
+      const correctOptText = (isMultipleChoice && correctIndices.length > 0)
+        ? correctIndices.map(i => `Option ${options[i].letter}`).join(', ')
+        : null;
+
+      const payload = {
+        questionText: cleanText,
+        isMultipleChoice,
+        options: isMultipleChoice ? options.map((opt, i) => ({
+          letter: opt.letter,
+          text: opt.text.trim(),
+          isCorrect: correctIndices.includes(i)
+        })) : [],
+        correctIndex: isMultipleChoice && correctIndices.length > 0 ? correctIndices[0] : null,
+        correctIndices: isMultipleChoice ? correctIndices : [],
+        correctOption: correctOptText,
+        correctOptions: isMultipleChoice ? correctIndices.map(i => `Option ${options[i].letter}`) : [],
+        hasImage: Boolean(hasImage && imagePreview),
+        imageUrl: hasImage ? imagePreview : null,
+        subject: qSubject,
+        examLevel: qExamLevel,
+        explanation: qExplanation.trim()
+      };
+
+      const res = await api.createQuestion(payload);
+      if (res.success) {
+        setQFormSuccess('Question created and saved successfully to the question bank!');
+        if (res.questions) {
+          setQuestionsList(res.questions);
+        } else if (res.question) {
+          setQuestionsList([res.question, ...questionsList]);
+        }
+        handleResetForm();
+        setTimeout(() => setQFormSuccess(''), 4000);
+      } else {
+        setQFormError(res.message || 'Failed to save question.');
+      }
+    } catch (err) {
+      setQFormError(err.message || 'An error occurred while saving the question.');
+    } finally {
+      setIsSavingQuestion(false);
+    }
+  };
+
+  const handleDeleteQuestion = async (qId) => {
+    if (window.confirm("Are you sure you want to delete this question permanently?")) {
+      const res = await api.deleteQuestion(qId);
+      if (res.questions) {
+        setQuestionsList(res.questions);
+      } else {
+        setQuestionsList(questionsList.filter(q => q.id !== qId));
+      }
+    }
+  };
+
+  const filteredQuestions = questionsList.filter(q => {
+    const textMatch = (q.questionText || '').toLowerCase().includes(questionSearch.toLowerCase()) ||
+                      (q.subject || '').toLowerCase().includes(questionSearch.toLowerCase());
+    if (!textMatch) return false;
+    if (questionTypeFilter === 'mc') return q.isMultipleChoice;
+    if (questionTypeFilter === 'text') return !q.isMultipleChoice && !q.hasImage;
+    if (questionTypeFilter === 'image') return q.hasImage;
+    return true;
+  });
+
   const currentTabLabel = navTabs.find(t => t.key === activeTab)?.label || 'Dashboard';
+
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
@@ -600,6 +830,604 @@ export default function AdminDashboardPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'questions' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            
+            {/* Top Toolbar */}
+            <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <HelpCircle size={22} color="var(--color-primary)" /> Question Bank & Creation
+                </h2>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: '4px 0 0 0' }}>
+                  Create and manage questions with optional multiple-choice options and question image uploads.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  className={`btn ${showQuestionForm ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => setShowQuestionForm(!showQuestionForm)}
+                  style={{ gap: '6px' }}
+                >
+                  <Plus size={16} /> {showQuestionForm ? 'Hide Form' : 'New Question'}
+                </button>
+              </div>
+            </div>
+
+            {/* Question Creation Form Container */}
+            {showQuestionForm && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(320px, 1fr)', gap: '24px' }}>
+                
+                {/* ── Left Column: Creation Form ── */}
+                <div className="card" style={{ borderLeft: '6px solid var(--color-primary)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
+                    <div>
+                      <h3 style={{ fontSize: '17px', fontWeight: 800, margin: 0 }}>Create Question</h3>
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Configure question text, optional choices, and optional image</span>
+                    </div>
+                    <span className="badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Sparkles size={12} /> Question Builder
+                    </span>
+                  </div>
+
+                  <form onSubmit={handleSaveQuestion}>
+                    {/* 1. Question Text Area */}
+                    <div className="form-group" style={{ marginBottom: '20px' }}>
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '14px', marginBottom: '6px' }}>
+                        Question *
+                      </label>
+                      <textarea
+                        id="input-question-text"
+                        className="form-input"
+                        rows={4}
+                        placeholder="Enter your question here..."
+                        value={qText}
+                        onChange={(e) => { setQText(e.target.value); setQFormError(''); }}
+                        style={{ width: '100%', resize: 'vertical', lineHeight: 1.5, fontSize: '14px', fontFamily: 'inherit' }}
+                        required
+                      />
+                    </div>
+
+                    {/* 2. Multiple Choice Options — OPTIONAL */}
+                    <div style={{
+                      padding: '16px',
+                      borderRadius: '14px',
+                      backgroundColor: isMultipleChoice ? 'var(--color-primary-light)' : 'var(--color-bg)',
+                      border: isMultipleChoice ? '1.5px solid var(--color-primary-border)' : '1px solid var(--color-border)',
+                      marginBottom: '20px',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
+                        <input
+                          id="checkbox-add-multiple-choice"
+                          type="checkbox"
+                          checked={isMultipleChoice}
+                          onChange={(e) => {
+                            setIsMultipleChoice(e.target.checked);
+                            setQFormError('');
+                          }}
+                          style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-main)' }}>
+                          Add Multiple Choice
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>(Optional)</span>
+                      </label>
+
+                      {isMultipleChoice && (
+                        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                            <span>Enter answer options and select one or more correct answers using the checkboxes:</span>
+                            {correctIndices.length > 0 && (
+                              <span style={{ fontWeight: 700, color: 'var(--color-success)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Check size={12} /> {correctIndices.length} correct {correctIndices.length === 1 ? 'answer' : 'answers'} marked
+                              </span>
+                            )}
+                          </div>
+
+                          {options.map((opt, idx) => {
+                            const isCorrect = correctIndices.includes(idx);
+                            return (
+                              <div
+                                key={opt.letter}
+                                id={`option-row-${opt.letter}`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  padding: '10px 14px',
+                                  borderRadius: '10px',
+                                  backgroundColor: isCorrect ? '#DCFCE7' : '#FFFFFF',
+                                  border: isCorrect ? '2px solid #16A34A' : '1px solid var(--color-border)',
+                                  transition: 'all 0.2s ease'
+                                }}
+                              >
+                                <span style={{
+                                  fontWeight: 800,
+                                  fontSize: '13px',
+                                  width: '74px',
+                                  color: isCorrect ? '#16A34A' : 'var(--color-text-main)',
+                                  flexShrink: 0
+                                }}>
+                                  Option {opt.letter}
+                                </span>
+
+                                <input
+                                  type="text"
+                                  className="form-input"
+                                  value={opt.text}
+                                  onChange={(e) => handleOptionChange(idx, e.target.value)}
+                                  placeholder={`Enter option ${opt.letter} text...`}
+                                  style={{
+                                    flex: 1,
+                                    padding: '8px 12px',
+                                    fontSize: '13px',
+                                    backgroundColor: isCorrect ? '#FFFFFF' : undefined
+                                  }}
+                                />
+
+                                <label
+                                  title="Mark as correct answer (supports multiple correct)"
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    cursor: 'pointer',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
+                                    backgroundColor: isCorrect ? '#16A34A' : 'var(--color-bg)',
+                                    color: isCorrect ? '#FFFFFF' : 'var(--color-text-muted)',
+                                    fontWeight: 700,
+                                    fontSize: '12px',
+                                    transition: 'all 0.2s ease',
+                                    flexShrink: 0,
+                                    border: '1px solid var(--color-border)'
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    name={`correct_selector_${idx}`}
+                                    checked={isCorrect}
+                                    onChange={() => handleToggleCorrectOption(idx)}
+                                    style={{ accentColor: '#16A34A', cursor: 'pointer', width: '15px', height: '15px' }}
+                                  />
+                                  Correct
+                                </label>
+
+                                {options.length > 2 && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline btn-sm"
+                                    title={`Remove Option ${opt.letter}`}
+                                    onClick={() => handleRemoveOption(idx)}
+                                    style={{ color: 'var(--color-error)', padding: '6px 8px', flexShrink: 0 }}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+
+                          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '4px' }}>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              onClick={handleAddOption}
+                              disabled={options.length >= 8}
+                              style={{ fontSize: '12px', gap: '6px' }}
+                            >
+                              <Plus size={14} /> Add Option {String.fromCharCode(65 + options.length)}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 3. Question Image — OPTIONAL */}
+                    <div style={{
+                      padding: '16px',
+                      borderRadius: '14px',
+                      backgroundColor: hasImage ? '#F5F3FF' : 'var(--color-bg)',
+                      border: hasImage ? '1.5px solid #DDD6FE' : '1px solid var(--color-border)',
+                      marginBottom: '20px',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
+                        <input
+                          id="checkbox-add-question-image"
+                          type="checkbox"
+                          checked={hasImage}
+                          onChange={(e) => {
+                            setHasImage(e.target.checked);
+                            if (!e.target.checked) {
+                              setImagePreview(null);
+                              setImageFileName('');
+                            }
+                            setQFormError('');
+                          }}
+                          style={{ width: '18px', height: '18px', accentColor: '#7C3AED', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-main)' }}>
+                          Add Question Image
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>(Optional)</span>
+                      </label>
+
+                      {hasImage && (
+                        <div style={{ marginTop: '16px' }}>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageFileSelect}
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                          />
+
+                          {!imagePreview ? (
+                            <div
+                              id="btn-upload-question-image"
+                              onClick={() => fileInputRef.current?.click()}
+                              style={{
+                                border: '2px dashed #C4B5FD',
+                                borderRadius: '12px',
+                                padding: '24px',
+                                textAlign: 'center',
+                                backgroundColor: '#FFFFFF',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#7C3AED'; e.currentTarget.style.backgroundColor = '#FAF5FF'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#C4B5FD'; e.currentTarget.style.backgroundColor = '#FFFFFF'; }}
+                            >
+                              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#F5F3FF', color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
+                                <Upload size={22} />
+                              </div>
+                              <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-text-main)', marginBottom: '4px' }}>
+                                Click to Upload Question Image
+                              </div>
+                              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                PNG, JPG, JPEG, WEBP or GIF (Max 5MB)
+                              </div>
+                            </div>
+                          ) : (
+                            <div id="box-image-preview" style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '16px', border: '1px solid var(--color-border)' }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <ImageIcon size={14} color="#7C3AED" /> Image Preview
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
+                                <div style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--color-border)', maxWidth: '280px', maxHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0F172A' }}>
+                                  <img
+                                    src={imagePreview}
+                                    alt="Question attachment preview"
+                                    style={{ maxWidth: '100%', maxHeight: '180px', objectFit: 'contain', display: 'block' }}
+                                  />
+                                </div>
+                                <div style={{ flex: 1, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-main)', wordBreak: 'break-all' }}>
+                                    {imageFileName || 'Selected question image'}
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline btn-sm"
+                                      onClick={() => fileInputRef.current?.click()}
+                                      style={{ fontSize: '12px' }}
+                                    >
+                                      Change Image
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline btn-sm"
+                                      onClick={handleRemoveImage}
+                                      style={{ color: 'var(--color-error)', fontSize: '12px' }}
+                                    >
+                                      <Trash2 size={13} /> Remove Image
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Additional Metadata: Subject & Exam Level */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: '12px' }}>Subject</label>
+                        <select className="form-input" value={qSubject} onChange={(e) => setQSubject(e.target.value)}>
+                          <option value="Mathematics">Mathematics</option>
+                          <option value="Science">Science</option>
+                          <option value="Physics">Physics</option>
+                          <option value="Chemistry">Chemistry</option>
+                          <option value="Biology">Biology</option>
+                          <option value="History">History</option>
+                          <option value="English">English</option>
+                          <option value="Scholarship & IQ">Scholarship & IQ</option>
+                          <option value="General">General</option>
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: '12px' }}>Exam Level</label>
+                        <select className="form-input" value={qExamLevel} onChange={(e) => setQExamLevel(e.target.value)}>
+                          <option value="ol">G.C.E. Ordinary Level (O/L)</option>
+                          <option value="al">G.C.E. Advanced Level (A/L)</option>
+                          <option value="g5">Grade 5 Scholarship</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Alerts */}
+                    {qFormError && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 14px', borderRadius: '8px', backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', fontSize: '13px', fontWeight: 600, marginBottom: '16px' }}>
+                        <AlertCircle size={16} flexShrink={0} /> {qFormError}
+                      </div>
+                    )}
+
+                    {qFormSuccess && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 14px', borderRadius: '8px', backgroundColor: 'var(--color-success-light)', color: 'var(--color-success)', fontSize: '13px', fontWeight: 600, marginBottom: '16px' }}>
+                        <CheckCircle size={16} flexShrink={0} /> {qFormSuccess}
+                      </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <button
+                        id="btn-save-question"
+                        type="submit"
+                        className="btn btn-primary btn-lg"
+                        disabled={isSavingQuestion}
+                        style={{ padding: '12px 28px', fontSize: '14px', fontWeight: 700, gap: '8px' }}
+                      >
+                        <Check size={18} /> {isSavingQuestion ? 'Saving Question...' : 'Save Question'}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={handleResetForm}
+                        disabled={isSavingQuestion}
+                      >
+                        Reset Form
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* ── Right Column: Live Interactive Preview ── */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="card" style={{ position: 'sticky', top: '80px', backgroundColor: '#FFFFFF' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Eye size={16} color="var(--color-primary)" />
+                        <span style={{ fontWeight: 800, fontSize: '14px' }}>Live Student Preview</span>
+                      </div>
+                      <span className="badge badge-neutral" style={{ fontSize: '10px' }}>
+                        {isMultipleChoice ? (hasImage ? 'Image + MC' : 'Multiple Choice') : (hasImage ? 'Image Only' : 'Text Only')}
+                      </span>
+                    </div>
+
+                    {/* Simulated question badge */}
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                      <span className="badge badge-primary">{qSubject}</span>
+                      <span className="badge badge-neutral">{qExamLevel.toUpperCase()}</span>
+                    </div>
+
+                    {/* Question text */}
+                    <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-main)', marginBottom: '14px', lineHeight: 1.4 }}>
+                      {qText.trim() || <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Question text will appear here...</span>}
+                    </h4>
+
+                    {/* Image Preview if present */}
+                    {hasImage && imagePreview && (
+                      <div style={{ marginBottom: '16px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--color-border)', backgroundColor: '#F8FAFC', maxHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img
+                          src={imagePreview}
+                          alt="Question Preview"
+                          style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Multiple Choice Preview if enabled */}
+                    {isMultipleChoice && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                        {options.map((opt, idx) => {
+                          const isCorrect = correctIndices.includes(idx);
+                          return (
+                            <div
+                              key={opt.letter}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                backgroundColor: isCorrect ? '#DCFCE7' : 'var(--color-bg)',
+                                border: isCorrect ? '1.5px solid #16A34A' : '1px solid var(--color-border)',
+                                fontSize: '13px',
+                                color: isCorrect ? '#15803D' : 'var(--color-text-main)',
+                                fontWeight: isCorrect ? 700 : 500
+                              }}
+                            >
+                              <span style={{
+                                width: '22px',
+                                height: '22px',
+                                borderRadius: '50%',
+                                backgroundColor: isCorrect ? '#16A34A' : 'white',
+                                color: isCorrect ? 'white' : 'var(--color-text-muted)',
+                                border: isCorrect ? 'none' : '1px solid var(--color-border)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '11px',
+                                fontWeight: 800
+                              }}>
+                                {opt.letter}
+                              </span>
+                              <span style={{ flex: 1 }}>
+                                {opt.text.trim() || <em style={{ color: 'var(--color-text-muted)' }}>Option {opt.letter} text...</em>}
+                              </span>
+                              {isCorrect && (
+                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803D', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  <Check size={12} /> Correct
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {!isMultipleChoice && (
+                      <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'var(--color-bg)', border: '1px dashed var(--color-border)', fontSize: '12px', color: 'var(--color-text-muted)', textAlign: 'center' }}>
+                        Normal descriptive question (No multiple choice options attached)
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Questions Table Card */}
+            <div className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button className={`btn btn-sm ${questionTypeFilter === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setQuestionTypeFilter('all')}>
+                    All ({questionsList.length})
+                  </button>
+                  <button className={`btn btn-sm ${questionTypeFilter === 'mc' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setQuestionTypeFilter('mc')}>
+                    Multiple Choice ({questionsList.filter(q => q.isMultipleChoice).length})
+                  </button>
+                  <button className={`btn btn-sm ${questionTypeFilter === 'text' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setQuestionTypeFilter('text')}>
+                    Text Only ({questionsList.filter(q => !q.isMultipleChoice && !q.hasImage).length})
+                  </button>
+                  <button className={`btn btn-sm ${questionTypeFilter === 'image' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setQuestionTypeFilter('image')}>
+                    With Image ({questionsList.filter(q => q.hasImage).length})
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '280px', backgroundColor: 'var(--color-bg)', padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                  <Search size={16} color="var(--color-text-muted)" />
+                  <input
+                    type="text"
+                    placeholder="Search question or subject..."
+                    value={questionSearch}
+                    onChange={(e) => setQuestionSearch(e.target.value)}
+                    style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px', minWidth: '850px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--color-bg)', borderBottom: '1px solid var(--color-border)' }}>
+                      <th style={{ padding: '14px 16px', color: 'var(--color-text-muted)', width: '38%' }}>Question</th>
+                      <th style={{ padding: '14px 16px', color: 'var(--color-text-muted)' }}>Type</th>
+                      <th style={{ padding: '14px 16px', color: 'var(--color-text-muted)' }}>Options & Key</th>
+                      <th style={{ padding: '14px 16px', color: 'var(--color-text-muted)' }}>Subject</th>
+                      <th style={{ padding: '14px 16px', color: 'var(--color-text-muted)' }}>Date</th>
+                      <th style={{ padding: '14px 16px', color: 'var(--color-text-muted)' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredQuestions.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                          No questions found matching the selected filter. Create a new question above!
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredQuestions.map((q, i) => (
+                        <tr key={q.id || i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                          <td style={{ padding: '14px 16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              {q.hasImage && q.imageUrl ? (
+                                <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--color-border)', flexShrink: 0, backgroundColor: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <img src={q.imageUrl} alt="Thumb" style={{ maxWidth: '100%', maxHeight: '48px', objectFit: 'cover' }} />
+                                </div>
+                              ) : null}
+                              <div>
+                                <div style={{ fontWeight: 700, color: 'var(--color-text-main)', lineHeight: 1.4, marginBottom: '4px' }}>
+                                  {q.questionText}
+                                </div>
+                                {q.explanation && (
+                                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                    💡 {q.explanation}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '14px 16px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                              <span className={`badge ${q.isMultipleChoice ? 'badge-primary' : 'badge-neutral'}`}>
+                                {q.isMultipleChoice
+                                  ? (Array.isArray(q.correctIndices) && q.correctIndices.length > 1 ? 'MC (Multi-Correct)' : 'Multiple Choice')
+                                  : 'Normal Text'}
+                              </span>
+                              {q.hasImage && (
+                                <span className="badge badge-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  <ImageIcon size={10} /> Image Attached
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '14px 16px' }}>
+                            {q.isMultipleChoice && Array.isArray(q.options) && q.options.length > 0 ? (
+                              <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                                  <Check size={12} /> Correct: {
+                                    (Array.isArray(q.correctOptions) && q.correctOptions.length > 0)
+                                      ? q.correctOptions.join(', ')
+                                      : (q.correctOption || (q.correctIndex !== null && q.correctIndex !== undefined ? `Option ${String.fromCharCode(65 + q.correctIndex)}` : 'None'))
+                                  }
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                                  {q.options.length} options ({q.options.map(o => o.letter || o.option_letter).join(', ')})
+                                </div>
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Descriptive</span>
+                            )}
+                          </td>
+
+                          <td style={{ padding: '14px 16px' }}>
+                            <div style={{ fontWeight: 600, fontSize: '13px' }}>{q.subject || 'General'}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>{q.examLevel || 'OL'}</div>
+                          </td>
+
+                          <td style={{ padding: '14px 16px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                            {q.createdAt ? new Date(q.createdAt).toISOString().split('T')[0] : 'Today'}
+                          </td>
+
+                          <td style={{ padding: '14px 16px' }}>
+                            <button
+                              className="btn btn-outline btn-sm"
+                              title="Delete Question"
+                              style={{ color: 'var(--color-error)' }}
+                              onClick={() => handleDeleteQuestion(q.id)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

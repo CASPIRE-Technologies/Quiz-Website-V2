@@ -52,23 +52,107 @@ export default function AnswerReviewPage() {
       </div>
 
       {displayQuestions.map((q, idx) => {
-        const isCorrect = (q.studentChoice !== undefined ? q.studentChoice : q.correctIndex) === q.correctIndex;
+        const isMulti = Array.isArray(q.correctIndices) && q.correctIndices.length > 1;
+        const correctIndicesList = Array.isArray(q.correctIndices) && q.correctIndices.length > 0
+          ? q.correctIndices
+          : (q.correctIndex !== undefined && q.correctIndex !== null ? [q.correctIndex] : []);
+
+        let isCorrect;
+        if (isMulti) {
+          if (Array.isArray(q.studentChoice)) {
+            const s1 = [...q.studentChoice].sort((a, b) => a - b);
+            const s2 = [...correctIndicesList].sort((a, b) => a - b);
+            isCorrect = s1.length === s2.length && s1.every((v, i) => v === s2[i]);
+          } else {
+            isCorrect = false;
+          }
+        } else {
+          const choice = Array.isArray(q.studentChoice) ? q.studentChoice[0] : q.studentChoice;
+          isCorrect = choice !== undefined ? choice === (correctIndicesList[0] ?? q.correctIndex) : true;
+        }
+
+        const hasOptions = Array.isArray(q.options) && q.options.length > 0 && q.isMultipleChoice !== false;
+
         return (
           <div key={q.id || idx} className="card" style={{ marginBottom: '20px', borderLeft: `6px solid ${isCorrect ? 'var(--color-success)' : 'var(--color-error)'}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Question {idx + 1}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>Question {idx + 1}</span>
+                {isMulti && (
+                  <span className="badge badge-primary" style={{ fontSize: '11px' }}>
+                    Multi-Correct
+                  </span>
+                )}
+              </div>
               <span className={`badge ${isCorrect ? 'badge-success' : 'badge-error'}`}>{isCorrect ? 'Correct ✓' : 'Incorrect ✕'}</span>
             </div>
 
-            <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>{q.text}</h4>
+            <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.4 }}>{q.text}</h4>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              {q.options.map((opt, oIdx) => (
-                <div key={oIdx} style={{ padding: '12px 16px', borderRadius: '8px', border: oIdx === q.correctIndex ? '1px solid var(--color-success)' : '1px solid var(--color-border)', backgroundColor: oIdx === q.correctIndex ? 'var(--color-success-light)' : 'var(--color-bg)', fontWeight: oIdx === q.correctIndex ? 700 : 500 }}>
-                  {String.fromCharCode(65 + oIdx)}. {opt} {oIdx === q.correctIndex ? '✓ (Correct Key)' : ''}
-                </div>
-              ))}
-            </div>
+            {/* Question Image if present */}
+            {q.hasImage && q.imageUrl && (
+              <div style={{
+                marginBottom: '16px',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                border: '1px solid var(--color-border)',
+                backgroundColor: '#F8FAFC',
+                maxHeight: '280px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px'
+              }}>
+                <img
+                  src={q.imageUrl}
+                  alt={`Diagram for Question ${idx + 1}`}
+                  style={{ maxWidth: '100%', maxHeight: '268px', objectFit: 'contain', borderRadius: '6px' }}
+                />
+              </div>
+            )}
+
+            {hasOptions ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {q.options.map((opt, oIdx) => {
+                  const isKey = correctIndicesList.includes(oIdx);
+                  return (
+                    <div
+                      key={oIdx}
+                      style={{
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        border: isKey ? '1.5px solid var(--color-success)' : '1px solid var(--color-border)',
+                        backgroundColor: isKey ? 'var(--color-success-light)' : 'var(--color-bg)',
+                        fontWeight: isKey ? 700 : 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '12px'
+                      }}
+                    >
+                      <div>
+                        <strong>{String.fromCharCode(65 + oIdx)}.</strong> {opt}
+                      </div>
+                      {isKey && (
+                        <span style={{ color: 'var(--color-success)', fontSize: '12px', fontWeight: 800, flexShrink: 0 }}>
+                          ✓ Correct Key
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px dashed var(--color-border)', fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                Descriptive / Open-ended Question
+              </div>
+            )}
+
+            {correctIndicesList.length > 0 && (
+              <div style={{ marginBottom: '12px', fontSize: '13px', fontWeight: 700, color: 'var(--color-success)' }}>
+                ✓ Correct {correctIndicesList.length > 1 ? 'Answer Keys' : 'Answer Key'}: {correctIndicesList.map(i => `Option ${String.fromCharCode(65 + i)}`).join(', ')}
+              </div>
+            )}
 
             <div style={{ backgroundColor: 'var(--color-primary-light)', padding: '16px', borderRadius: '14px', fontSize: '14px', color: '#1E3A8A', border: '1px solid var(--color-primary-border)' }}>
               <strong>Solution Explanation:</strong><br />

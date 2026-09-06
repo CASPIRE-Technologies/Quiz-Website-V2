@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Sparkles, UserPlus, LogIn, XCircle } from 'lucide-react';
+import { CheckCircle2, UserPlus, LogIn, XCircle } from 'lucide-react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -21,101 +21,60 @@ export default function AuthPage() {
   const [activeAccountName, setActiveAccountName] = useState('');
   const [authError, setAuthError] = useState('');
 
-  const handleFallbackGoogleLogin = async () => {
-    try {
-      setIsSplashing(true);
-      setAuthPanelStatus('success');
-      setAuthError('');
+  // Official React Google OAuth Login Hook
+  const triggerGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setIsSplashing(true);
+        setAuthPanelStatus('success');
+        setAuthError('');
 
-      const googlePayload = {
-        email: 'student.google@eduquiz.lk',
-        name: 'Google Student',
-        picture: 'https://lh3.googleusercontent.com/a/default-user'
-      };
+        // Fetch user profile from Google using the access_token
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        });
 
-      const nextUser = await googleLoginUser(googlePayload);
-      setActiveAccountName(nextUser.name || 'Student');
-
-      setTimeout(() => {
-        setIsSplashing(false);
-        if (!nextUser?.examLevel) {
-          navigate('/select-exam-level');
-        } else {
-          navigate('/dashboard');
+        if (!userInfoRes.ok) {
+          throw new Error('Failed to fetch profile from Google.');
         }
-      }, 1200);
-    } catch (err) {
-      setIsSplashing(false);
-      setAuthError(err.message || 'Google Sign-In failed');
-    }
-  };
 
-  // Official React Google OAuth Login Trigger with Fallback Safety
-  let triggerGoogleLogin;
-  try {
-    triggerGoogleLogin = useGoogleLogin({
-      onSuccess: async (tokenResponse) => {
-        try {
-          setIsSplashing(true);
-          setAuthPanelStatus('success');
-          setAuthError('');
+        const profile = await userInfoRes.json();
 
-          let googlePayload = {};
-          if (tokenResponse && tokenResponse.access_token) {
-            const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-            });
-            const profile = await userInfoRes.json();
+        const googlePayload = {
+          email: profile.email,
+          name: profile.name || profile.given_name || 'Google Student',
+          sub: profile.sub,
+          picture: profile.picture || null
+        };
 
-            googlePayload = {
-              email: profile.email,
-              name: profile.name || profile.given_name || 'Google Student',
-              sub: profile.sub,
-              picture: profile.picture || null
-            };
-          } else {
-            googlePayload = {
-              email: 'student.google@eduquiz.lk',
-              name: 'Google Student',
-              picture: 'https://lh3.googleusercontent.com/a/default-user'
-            };
-          }
+        const nextUser = await googleLoginUser(googlePayload);
+        setActiveAccountName(nextUser.name || 'Student');
 
-          const nextUser = await googleLoginUser(googlePayload);
-          setActiveAccountName(nextUser.name || 'Student');
-
-          setTimeout(() => {
-            setIsSplashing(false);
-            if (!nextUser?.examLevel) {
-              navigate('/select-exam-level');
-            } else {
-              navigate('/dashboard');
-            }
-          }, 1200);
-        } catch (err) {
+        setTimeout(() => {
           setIsSplashing(false);
-          setAuthError(err.message || 'Google Authentication failed');
-        }
-      },
-      onError: () => {
-        handleFallbackGoogleLogin();
+          if (isSignUp) {
+            sessionStorage.setItem('eduquiz_new_registration', 'true');
+            navigate('/welcome');
+          } else {
+            sessionStorage.removeItem('eduquiz_new_registration');
+            navigate('/dashboard');
+          }
+        }, 1200);
+      } catch (err) {
+        setIsSplashing(false);
+        setAuthError(err.message || 'Google Authentication failed');
       }
-    });
-  } catch (e) {
-    triggerGoogleLogin = handleFallbackGoogleLogin;
-  }
+    },
+    onError: (errorResponse) => {
+      setIsSplashing(false);
+      setAuthError('Google Sign-In was cancelled or failed.');
+      console.error('Google OAuth Error:', errorResponse);
+    }
+  });
 
   const handleGoogleClick = () => {
     setAuthError('');
-    try {
-      if (typeof triggerGoogleLogin === 'function') {
-        triggerGoogleLogin();
-      } else {
-        handleFallbackGoogleLogin();
-      }
-    } catch (err) {
-      handleFallbackGoogleLogin();
-    }
+    triggerGoogleLogin();
   };
 
   const handleSubmit = async (e) => {
@@ -155,17 +114,18 @@ export default function AuthPage() {
             name: name.trim() || 'New Student',
             email: trimmedEmail,
             password: trimmedPass,
-            school: school.trim() || 'Sri Lankan School'
+            school: school.trim() || 'Sri Lankan School',
+            examLevel: 'G.C.E. Ordinary Level (O/L)'
           });
-          nextRoute = '/select-exam-level';
+          sessionStorage.setItem('eduquiz_new_registration', 'true');
+          nextRoute = '/welcome';
         } else {
           nextUser = await loginUser({
             email: trimmedEmail,
             password: trimmedPass
           });
-          if (!nextUser?.examLevel) {
-            nextRoute = '/select-exam-level';
-          }
+          sessionStorage.removeItem('eduquiz_new_registration');
+          nextRoute = '/dashboard';
         }
 
         if (nextUser) {
@@ -196,7 +156,7 @@ export default function AuthPage() {
       position: 'relative'
     }}>
       
-      {/* Dynamic Animated Auth Splash Screen Overlay */}
+      {/* Splash Screen Overlay */}
       {isSplashing && (
         <div style={{
           position: 'fixed',
@@ -224,8 +184,8 @@ export default function AuthPage() {
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              backgroundColor: authPanelStatus === 'success' ? 'var(--color-success-light)' : 'var(--color-error-light)',
-              color: authPanelStatus === 'success' ? 'var(--color-success)' : 'var(--color-error)',
+              backgroundColor: authPanelStatus === 'success' ? '#DCFCE7' : '#FEE2E2',
+              color: authPanelStatus === 'success' ? '#16A34A' : '#DC2626',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -235,10 +195,10 @@ export default function AuthPage() {
               {authPanelStatus === 'success' ? <CheckCircle2 size={36} /> : <XCircle size={36} />}
             </div>
             
-            <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>
               {authPanelStatus === 'success' ? 'Authentication Successful!' : 'Authentication Notice'}
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+            <p style={{ fontSize: '14px', color: '#64748B', fontWeight: 500 }}>
               {authPanelStatus === 'success'
                 ? <>Logging into EduQuiz database as <strong>{activeAccountName}</strong>...</>
                 : (authError || 'The username or password is incorrect.')}
@@ -247,20 +207,20 @@ export default function AuthPage() {
         </div>
       )}
 
-      {/* Main Solve It Smart Animated Auth Card Container */}
+      {/* Auth Card Container */}
       <div className={`solve-auth-card ${isSignUp ? 'right-panel-active' : ''}`}>
         
-        {/* REAL SIGN UP FORM */}
+        {/* SIGN UP FORM */}
         <div className="form-container sign-up-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 10px auto' }}>EQ</div>
               <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Create Student Account</h2>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Register your account on EduQuiz Platform</p>
+              <p style={{ fontSize: '13px', color: '#64748B' }}>Register your account on EduQuiz Platform</p>
             </div>
 
             {authError && (
-              <div style={{ backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
+              <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
                 {authError}
               </div>
             )}
@@ -275,8 +235,8 @@ export default function AuthPage() {
                 justifyContent: 'center',
                 gap: '10px',
                 backgroundColor: 'white',
-                border: '1.5px solid var(--color-border)',
-                color: 'var(--color-text-main)',
+                border: '1.5px solid #E2E8F0',
+                color: '#0F172A',
                 fontWeight: 600,
                 fontSize: '14px',
                 padding: '10px',
@@ -296,9 +256,9 @@ export default function AuthPage() {
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0 14px 0' }}>
-              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
-              <span style={{ padding: '0 10px', fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>or email</span>
-              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
+              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
+              <span style={{ padding: '0 10px', fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>or email</span>
+              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '10px' }}>
@@ -343,19 +303,17 @@ export default function AuthPage() {
           </form>
         </div>
 
-        {/* REAL SIGN IN FORM */}
+        {/* SIGN IN FORM */}
         <div className="form-container sign-in-container">
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <div className="logo-badge" style={{ margin: '0 auto 10px auto' }}>EQ</div>
               <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Student & Admin Sign In</h2>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                Sign in with credentials or Google
-              </p>
+              <p style={{ fontSize: '13px', color: '#64748B' }}>Sign in with credentials or Google</p>
             </div>
 
             {authError && (
-              <div style={{ backgroundColor: 'var(--color-error-light)', color: 'var(--color-error)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
+              <div style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', fontWeight: 600 }}>
                 {authError}
               </div>
             )}
@@ -370,8 +328,8 @@ export default function AuthPage() {
                 justifyContent: 'center',
                 gap: '10px',
                 backgroundColor: 'white',
-                border: '1.5px solid var(--color-border)',
-                color: 'var(--color-text-main)',
+                border: '1.5px solid #E2E8F0',
+                color: '#0F172A',
                 fontWeight: 600,
                 fontSize: '14px',
                 padding: '10px',
@@ -391,9 +349,9 @@ export default function AuthPage() {
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0 14px 0' }}>
-              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
-              <span style={{ padding: '0 10px', fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>or email</span>
-              <div style={{ flex: 1, borderBottom: '1px solid var(--color-border)' }}></div>
+              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
+              <span style={{ padding: '0 10px', fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>or email</span>
+              <div style={{ flex: 1, borderBottom: '1px solid #E2E8F0' }}></div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '10px' }}>
@@ -426,46 +384,32 @@ export default function AuthPage() {
           </form>
         </div>
 
-        {/* OVERLAY SLIDING PANEL */}
+        {/* OVERLAY PANEL */}
         <div className="overlay-container">
           <div className="overlay">
-            
             <div className="overlay-panel overlay-left">
               <div className="overlay-illustration-box">
-                <img 
-                  src="/auth-bg-transparent.png" 
-                  alt="EduQuiz Graduation Illustration" 
-                  className="overlay-illustration-img" 
-                />
+                <img src="/auth-bg-transparent.png" alt="EduQuiz Illustration" className="overlay-illustration-img" />
               </div>
-              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 10px auto' }}>EQ</div>
+              <div className="logo-badge" style={{ background: 'white', color: '#4F46E5', margin: '0 auto 10px auto' }}>EQ</div>
               <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>Welcome Back!</h2>
               <p style={{ fontSize: '14px', opacity: 0.9, lineHeight: 1.5, maxWidth: '300px' }}>
                 To keep connected with your quiz learning progress, please login with your personal info
               </p>
-              <button className="ghost-btn" onClick={() => setIsSignUp(false)}>
-                Sign In
-              </button>
+              <button className="ghost-btn" onClick={() => setIsSignUp(false)}>Sign In</button>
             </div>
 
             <div className="overlay-panel overlay-right">
               <div className="overlay-illustration-box">
-                <img 
-                  src="/auth-bg-transparent.png" 
-                  alt="EduQuiz Graduation Illustration" 
-                  className="overlay-illustration-img" 
-                />
+                <img src="/auth-bg-transparent.png" alt="EduQuiz Illustration" className="overlay-illustration-img" />
               </div>
-              <div className="logo-badge" style={{ background: 'white', color: 'var(--color-primary)', margin: '0 auto 10px auto' }}>EQ</div>
+              <div className="logo-badge" style={{ background: 'white', color: '#4F46E5', margin: '0 auto 10px auto' }}>EQ</div>
               <h2 style={{ fontSize: '26px', fontWeight: 800, marginBottom: '8px', lineHeight: 1.2 }}>Create Real Account</h2>
               <p style={{ fontSize: '14px', opacity: 0.9, lineHeight: 1.5, maxWidth: '300px' }}>
                 Register your own personal account to begin timed quizzes and save your results to EduQuiz Database
               </p>
-              <button className="ghost-btn" onClick={() => setIsSignUp(true)}>
-                Create Account
-              </button>
+              <button className="ghost-btn" onClick={() => setIsSignUp(true)}>Create Account</button>
             </div>
-
           </div>
         </div>
 
