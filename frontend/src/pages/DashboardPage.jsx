@@ -89,7 +89,6 @@ export default function DashboardPage() {
 
   return (
     <div style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(12px)', transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-
       {/* ═══ HERO GREETING SECTION ═══ */}
       <div className="dash-hero" style={{
         background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #1e1b4b 100%)',
@@ -130,7 +129,7 @@ export default function DashboardPage() {
                   fontSize: '13px',
                   borderRadius: '12px',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(99, 102, 241, 0.35)',
+                  boxShadow: 'var(--shadow-md)',
                   transition: 'all 0.25s ease',
                 }}
               >
@@ -284,7 +283,7 @@ export default function DashboardPage() {
                     position: 'relative',
                     overflow: 'hidden',
                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                    boxShadow: isSelected ? '0 8px 24px -4px rgba(37, 99, 235, 0.2)' : 'var(--shadow-sm)',
+                    boxShadow: isSelected ? 'var(--shadow-md)' : 'var(--shadow-sm)',
                     opacity: mounted ? 1 : 0,
                     transform: mounted ? 'translateX(0)' : 'translateX(-16px)',
                     transitionDelay: `${(i + 4) * 80}ms`,
@@ -565,7 +564,7 @@ export default function DashboardPage() {
             borderRadius: '12px',
             cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: '6px',
-            boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
+            boxShadow: 'var(--shadow-md)',
           }}
         >
           {t('dashboard.myQuizzesBtn')} <ArrowRight size={14} />

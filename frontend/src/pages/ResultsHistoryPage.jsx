@@ -146,7 +146,7 @@ export default function ResultsHistoryPage() {
   }, [completedAttemptsList]);
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div style={{ margin: '0 auto' }}>
       
       {/* Page Header */}
       <div style={{ marginBottom: '28px' }}>

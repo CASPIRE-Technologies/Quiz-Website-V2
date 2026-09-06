@@ -210,7 +210,7 @@ export default function ProfilePage() {
   const receiptsList = profileData?.paymentHistory || [];
 
   return (
-    <div style={{ maxWidth: '1050px', margin: '0 auto' }}>
+    <div style={{  margin: '0 auto' }}>
       
       {/* Page Header */}
       <div style={{
