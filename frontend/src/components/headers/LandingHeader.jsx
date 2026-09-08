@@ -10,7 +10,6 @@ import {
   ArrowRight,
   LogIn,
   User,
-  CheckCircle2,
   ChevronDown,
   Layers,
   GraduationCap,
@@ -44,27 +43,18 @@ export default function LandingHeader() {
     { id: "contact", label: "Contact", labelSi: "සම්බන්ධ වන්න", icon: Phone },
   ];
 
-  // Detect scroll for glassmorphism styling
+  // Detect scroll for header glassmorphism
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 20);
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Prevent background scrolling when mobile menu drawer is open
+  // Lock background scroll when drawer is open
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -81,7 +71,7 @@ export default function LandingHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // IntersectionObserver to detect active section in viewport
+  // Active section observer
   useEffect(() => {
     const sectionIds = ["home", "features", "plans", "about", "previews", "contact"];
     const observers = [];
@@ -104,12 +94,10 @@ export default function LandingHeader() {
       }
     });
 
-    return () => {
-      observers.forEach((obs) => obs.disconnect());
-    };
+    return () => observers.forEach((obs) => obs.disconnect());
   }, []);
 
-  // Smooth scroll handler with mobile drawer closure
+  // Smooth scroll handler
   const scrollToSection = (e, sectionId) => {
     if (e && e.preventDefault) e.preventDefault();
     setMobileMenuOpen(false);
@@ -117,8 +105,7 @@ export default function LandingHeader() {
 
     const targetEl = document.getElementById(sectionId);
     if (targetEl) {
-      // Dynamic header offset depending on screen size
-      const headerOffset = window.innerWidth <= 640 ? 66 : window.innerWidth <= 1024 ? 72 : 78;
+      const headerOffset = window.innerWidth <= 640 ? 64 : window.innerWidth <= 1080 ? 70 : 76;
       const elementPosition = targetEl.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -169,7 +156,7 @@ export default function LandingHeader() {
         }}
       >
         <div className="landing-header-inner">
-          {/* ── Brand Logo ── */}
+          {/* Brand Logo */}
           <a
             href="#home"
             onClick={(e) => scrollToSection(e, "home")}
@@ -259,13 +246,14 @@ export default function LandingHeader() {
             </div>
           </a>
 
-          {/* ── Desktop Navigation Menu Pills (Hidden on Tablet & Mobile) ── */}
+          {/* Desktop Navigation */}
           <nav
             className="landing-nav-desktop"
             style={{
               alignItems: "center",
               gap: "2px",
-              padding: "4px 6px",
+              padding: "2px 6px",
+              margin: "10px",
               borderRadius: "999px",
               backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(15, 23, 42, 0.04)",
               border: isDark ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(15, 23, 42, 0.06)",
@@ -324,7 +312,7 @@ export default function LandingHeader() {
             })}
           </nav>
 
-          {/* ── Right Actions: Language, Theme & Auth ── */}
+          {/* Right Header Actions */}
           <div
             className="landing-header-actions"
             style={{
@@ -452,7 +440,7 @@ export default function LandingHeader() {
               {isDark ? <Sun size={17} /> : <Moon size={17} />}
             </button>
 
-            {/* Desktop Auth CTAs (Hidden on Mobile, simplified on Tablet) */}
+            {/* Desktop Auth Buttons */}
             <div className="landing-header-auth-desktop">
               {user ? (
                 <button
@@ -533,7 +521,7 @@ export default function LandingHeader() {
               )}
             </div>
 
-            {/* Tablet/Mobile Hamburger Toggle Button */}
+            {/* Mobile / Tablet Hamburger Button */}
             <button
               type="button"
               className="landing-hamburger-btn"
@@ -545,10 +533,14 @@ export default function LandingHeader() {
                 height: "38px",
                 borderRadius: "10px",
                 border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(0, 0, 0, 0.1)",
-                background: mobileMenuOpen 
-                  ? (isDark ? "rgba(56, 189, 248, 0.15)" : "rgba(2, 132, 199, 0.1)")
-                  : (isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(15, 23, 42, 0.04)"),
-                color: mobileMenuOpen ? "#0284C7" : (isDark ? "#F8FAFC" : "#0F172A"),
+                background: mobileMenuOpen
+                  ? isDark
+                    ? "rgba(56, 189, 248, 0.15)"
+                    : "rgba(2, 132, 199, 0.1)"
+                  : isDark
+                    ? "rgba(255, 255, 255, 0.05)"
+                    : "rgba(15, 23, 42, 0.04)",
+                color: mobileMenuOpen ? "#0284C7" : isDark ? "#F8FAFC" : "#0F172A",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
               }}
@@ -559,7 +551,7 @@ export default function LandingHeader() {
           </div>
         </div>
 
-        {/* ── Mobile/Tablet Backdrop Overlay ── */}
+        {/* Mobile Backdrop Overlay */}
         {mobileMenuOpen && (
           <div
             onClick={() => setMobileMenuOpen(false)}
@@ -578,7 +570,7 @@ export default function LandingHeader() {
           />
         )}
 
-        {/* ── Mobile & Tablet Slide-Down Navigation Drawer ── */}
+        {/* Mobile & Tablet Drawer */}
         {mobileMenuOpen && (
           <div
             className="landing-mobile-drawer"
@@ -591,15 +583,15 @@ export default function LandingHeader() {
               borderTop: isDark ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(0, 0, 0, 0.06)",
               borderBottom: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(0, 0, 0, 0.1)",
               boxShadow: "0 25px 40px -10px rgba(0, 0, 0, 0.45)",
-              padding: "18px 20px 24px",
-              maxHeight: "calc(100vh - 76px)",
+              padding: "16px 18px 20px",
+              maxHeight: "calc(100vh - 70px)",
               overflowY: "auto",
               zIndex: 9999,
               animation: "drawerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
-            {/* Quick Section Links Grid */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "18px" }}>
+            {/* Nav Links */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}>
               {navLinks.map((item) => {
                 const isActive = activeSection === item.id;
                 const IconComp = item.icon;
@@ -612,10 +604,10 @@ export default function LandingHeader() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      padding: "12px 16px",
+                      padding: "10px 14px",
                       borderRadius: "12px",
                       textDecoration: "none",
-                      fontSize: "15px",
+                      fontSize: "14.5px",
                       fontWeight: isActive ? 700 : 600,
                       color: isActive ? "#0284C7" : isDark ? "#E2E8F0" : "#334155",
                       backgroundColor: isActive
@@ -624,7 +616,9 @@ export default function LandingHeader() {
                           : "rgba(2, 132, 199, 0.08)"
                         : "transparent",
                       border: isActive
-                        ? isDark ? "1px solid rgba(56, 189, 248, 0.2)" : "1px solid rgba(2, 132, 199, 0.15)"
+                        ? isDark
+                          ? "1px solid rgba(56, 189, 248, 0.2)"
+                          : "1px solid rgba(2, 132, 199, 0.15)"
                         : "1px solid transparent",
                       transition: "all 0.15s ease",
                     }}
@@ -632,12 +626,14 @@ export default function LandingHeader() {
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <div
                         style={{
-                          width: "32px",
-                          height: "32px",
+                          width: "30px",
+                          height: "30px",
                           borderRadius: "8px",
                           background: isActive
                             ? "rgba(2, 132, 199, 0.15)"
-                            : isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(15, 23, 42, 0.04)",
+                            : isDark
+                              ? "rgba(255, 255, 255, 0.05)"
+                              : "rgba(15, 23, 42, 0.04)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -652,36 +648,36 @@ export default function LandingHeader() {
                     {isActive ? (
                       <span
                         style={{
-                          width: "7px",
-                          height: "7px",
+                          width: "6px",
+                          height: "6px",
                           borderRadius: "50%",
                           backgroundColor: "#0284C7",
                           boxShadow: "0 0 8px #38BDF8",
                         }}
                       />
                     ) : (
-                      <ArrowRight size={15} style={{ opacity: 0.35 }} />
+                      <ArrowRight size={14} style={{ opacity: 0.35 }} />
                     )}
                   </a>
                 );
               })}
             </div>
 
-            {/* Mobile/Tablet Controls: Language & Theme quick toggle bar */}
+            {/* Language & Theme Controls Bar */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                padding: "12px 16px",
-                borderRadius: "14px",
+                padding: "10px 14px",
+                borderRadius: "12px",
                 background: isDark ? "rgba(255, 255, 255, 0.04)" : "rgba(15, 23, 42, 0.03)",
                 border: isDark ? "1px solid rgba(255, 255, 255, 0.06)" : "1px solid rgba(0, 0, 0, 0.05)",
-                marginBottom: "16px",
+                marginBottom: "14px",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "13px", fontWeight: 600, color: isDark ? "#94A3B8" : "#64748B" }}>
+                <span style={{ fontSize: "12.5px", fontWeight: 600, color: isDark ? "#94A3B8" : "#64748B" }}>
                   {isSinhala ? "භාෂාව:" : "Language:"}
                 </span>
                 <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)" }}>
@@ -689,9 +685,9 @@ export default function LandingHeader() {
                     type="button"
                     onClick={() => setLanguage("en")}
                     style={{
-                      padding: "4px 10px",
+                      padding: "4px 9px",
                       border: "none",
-                      fontSize: "12px",
+                      fontSize: "11.5px",
                       fontWeight: 700,
                       cursor: "pointer",
                       backgroundColor: language === "en" ? "#0284C7" : "transparent",
@@ -704,9 +700,9 @@ export default function LandingHeader() {
                     type="button"
                     onClick={() => setLanguage("si")}
                     style={{
-                      padding: "4px 10px",
+                      padding: "4px 9px",
                       border: "none",
-                      fontSize: "12px",
+                      fontSize: "11.5px",
                       fontWeight: 700,
                       cursor: "pointer",
                       backgroundColor: language === "si" ? "#0284C7" : "transparent",
@@ -719,15 +715,15 @@ export default function LandingHeader() {
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "13px", fontWeight: 600, color: isDark ? "#94A3B8" : "#64748B" }}>
+                <span style={{ fontSize: "12.5px", fontWeight: 600, color: isDark ? "#94A3B8" : "#64748B" }}>
                   {isDark ? (isSinhala ? "අඳුරු" : "Dark") : (isSinhala ? "දීප්තිමත්" : "Light")}
                 </span>
                 <button
                   type="button"
                   onClick={toggleTheme}
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: "30px",
+                    height: "30px",
                     borderRadius: "8px",
                     border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.08)",
                     background: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.05)",
@@ -739,19 +735,13 @@ export default function LandingHeader() {
                   }}
                   title="Toggle Theme"
                 >
-                  {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                  {isDark ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
               </div>
             </div>
 
-            {/* Mobile/Tablet Auth Actions */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-              }}
-            >
+            {/* Mobile Auth CTAs */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {user ? (
                 <button
                   onClick={() => {
@@ -760,24 +750,24 @@ export default function LandingHeader() {
                   }}
                   style={{
                     width: "100%",
-                    height: "46px",
+                    height: "42px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "8px",
-                    borderRadius: "12px",
+                    borderRadius: "11px",
                     border: "none",
                     background: "linear-gradient(135deg, #0284C7 0%, #2563EB 100%)",
                     color: "#FFFFFF",
                     fontWeight: 700,
-                    fontSize: "15px",
+                    fontSize: "14px",
                     cursor: "pointer",
                     boxShadow: "0 6px 18px rgba(37, 99, 235, 0.35)",
                   }}
                 >
-                  <User size={18} />
+                  <User size={16} />
                   <span>Go to Student Dashboard</span>
-                  <ArrowRight size={16} />
+                  <ArrowRight size={15} />
                 </button>
               ) : (
                 <>
@@ -786,21 +776,21 @@ export default function LandingHeader() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{
                       width: "100%",
-                      height: "44px",
+                      height: "42px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: "8px",
-                      borderRadius: "12px",
+                      borderRadius: "11px",
                       textDecoration: "none",
                       border: isDark ? "1px solid rgba(255, 255, 255, 0.15)" : "1px solid rgba(0, 0, 0, 0.15)",
                       color: isDark ? "#F8FAFC" : "#0F172A",
                       fontWeight: 600,
-                      fontSize: "14.5px",
+                      fontSize: "14px",
                       background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
                     }}
                   >
-                    <LogIn size={16} />
+                    <LogIn size={15} />
                     <span>{isSinhala ? "ඇතුල් වන්න" : "Sign In to Account"}</span>
                   </Link>
 
@@ -810,21 +800,21 @@ export default function LandingHeader() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{
                       width: "100%",
-                      height: "46px",
+                      height: "44px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: "8px",
-                      borderRadius: "12px",
+                      borderRadius: "11px",
                       textDecoration: "none",
                       background: "linear-gradient(135deg, #0284C7 0%, #2563EB 50%, #7C3AED 100%)",
                       color: "#FFFFFF",
                       fontWeight: 700,
-                      fontSize: "15px",
+                      fontSize: "14px",
                       boxShadow: "0 6px 18px rgba(37, 99, 235, 0.35)",
                     }}
                   >
-                    <Sparkles size={16} />
+                    <Sparkles size={15} />
                     <span>{isSinhala ? "නොමිලේ ලියාපදිංචි වන්න" : "Get Started Free"}</span>
                   </Link>
                 </>
@@ -843,7 +833,7 @@ export default function LandingHeader() {
           padding: 0 24px;
           display: flex;
           alignItems: center;
-          justifyContent: space-between;
+          justify-content: space-between;
           gap: 16px;
           transition: height 0.2s ease, padding 0.2s ease;
         }
@@ -917,7 +907,7 @@ export default function LandingHeader() {
           color: #0284C7 !important;
         }
 
-        /* Tablet Responsive Breakpoint (768px - 1080px) */
+        /* Responsive Breakpoint: Tablet (<= 1080px) */
         @media (max-width: 1080px) {
           .landing-header-inner {
             height: 70px;
@@ -931,7 +921,7 @@ export default function LandingHeader() {
           }
         }
 
-        /* Mobile Responsive Breakpoint (<= 640px) */
+        /* Responsive Breakpoint: Mobile (<= 640px) */
         @media (max-width: 640px) {
           .landing-header-inner {
             height: 64px;
@@ -941,9 +931,7 @@ export default function LandingHeader() {
           .landing-header-auth-desktop {
             display: none !important;
           }
-          .brand-subtitle {
-            display: none !important;
-          }
+          .brand-subtitle,
           .brand-pill {
             display: none !important;
           }
@@ -952,7 +940,7 @@ export default function LandingHeader() {
           }
         }
 
-        /* Extra small devices (<= 380px) */
+        /* Responsive Breakpoint: Extra Small (<= 380px) */
         @media (max-width: 380px) {
           .landing-header-inner {
             padding: 0 10px;
