@@ -4,7 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { CheckCircle2, UserPlus, LogIn, XCircle, Sun, Moon, Globe } from 'lucide-react';
+import { CheckCircle2, UserPlus, LogIn, XCircle, Sun, Moon, Globe, Eye, EyeOff } from 'lucide-react';
 
 import './auth.css';
 
@@ -20,6 +20,10 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [school, setSchool] = useState('');
 
   const [isSplashing, setIsSplashing] = useState(false);
@@ -97,6 +101,17 @@ export default function AuthPage() {
     if (!isAdminAuth && !EMAIL_REGEX.test(trimmedEmail)) {
       setAuthError("Please enter a valid email address (e.g. name@student.lk)");
       return;
+    }
+
+    if (isSignUp) {
+      if (trimmedPass.length < 6) {
+        setAuthError(language === 'si' ? "මුරපදය අවම වශයෙන් අකුරු 6ක් විය යුතුය!" : "Password must be at least 6 characters long!");
+        return;
+      }
+      if (trimmedPass !== confirmPassword.trim()) {
+        setAuthError(language === 'si' ? "මුරපද දෙක එකිනෙකට නොගැළපේ!" : "Passwords do not match!");
+        return;
+      }
     }
 
     setIsSplashing(false);
@@ -319,16 +334,83 @@ export default function AuthPage() {
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: '12px' }}>
+            <div className="form-group" style={{ marginBottom: '10px' }}>
               <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t('auth.createPassword')} *</label>
-              <input
-                type="password"
-                className="form-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="form-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{ paddingRight: '40px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '4px'
+                  }}
+                  title={showPassword ? "Hide password" : "Show password"}
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '12px' }}>
+              <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>
+                {language === 'si' ? 'මුරපදය තහවුරු කරන්න *' : 'Confirm Password *'}
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  className="form-input"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{ paddingRight: '40px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '4px'
+                  }}
+                  title={showConfirmPassword ? "Hide password" : "Show password"}
+                  aria-label="Toggle confirm password visibility"
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {confirmPassword && password !== confirmPassword && (
+                <span style={{ fontSize: '11px', color: 'var(--color-error)', marginTop: '4px', display: 'block', fontWeight: 500 }}>
+                  {language === 'si' ? 'මුරපද දෙක එකිනෙකට නොගැළපේ' : 'Passwords do not match'}
+                </span>
+              )}
             </div>
 
             <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '10px' }}>
@@ -411,14 +493,38 @@ export default function AuthPage() {
 
             <div className="form-group" style={{ marginBottom: '12px' }}>
               <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>{t('auth.password')}</label>
-              <input
-                type="password"
-                className="form-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showSignInPassword ? "text" : "password"}
+                  className="form-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{ paddingRight: '40px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSignInPassword(!showSignInPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '4px'
+                  }}
+                  title={showSignInPassword ? "Hide password" : "Show password"}
+                  aria-label="Toggle password visibility"
+                >
+                  {showSignInPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '10px' }}>

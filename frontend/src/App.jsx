@@ -119,6 +119,7 @@ function AdminRoute({ children }) {
 function LayoutShell({ children }) {
   const location = useLocation();
   const isStandalonePage =
+    location.pathname === "/" ||
     location.pathname === "/login" ||
     location.pathname === "/welcome" ||
     location.pathname === "/select-exam-level" ||
