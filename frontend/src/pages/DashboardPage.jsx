@@ -25,9 +25,10 @@ import { useLanguage } from "../context/LanguageContext";
 /* ───── Helpers ───── */
 function getGreetingKey() {
   const h = new Date().getHours();
-  if (h < 12) return { key: "dashboard.goodMorning", emoji: "🌅" };
-  if (h < 17) return { key: "dashboard.goodAfternoon", emoji: "☀️" };
-  return { key: "dashboard.goodEvening", emoji: "🌙" };
+  if (h < 12)
+    return { key: "dashboard.goodMorning", emoji: "/logos/sun-rising.png" };
+  if (h < 17) return { key: "dashboard.goodAfternoon", emoji: "/logos/sun.png" };
+  return { key: "dashboard.goodEvening", emoji: "/logos/moon.png" };
 }
 
 function AnimatedNumber({ value, suffix = "" }) {
@@ -103,16 +104,16 @@ export default function DashboardPage() {
       id: "g5",
       title: t("exam.grade5"),
       badge: t("exam.grade5Badge"),
-      icon: "🎒",
+      icon: "/logos/scholorship-light.png",
       desc: t("exam.grade5Desc"),
-      gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)",
-      shadowColor: "rgba(251, 191, 36, 0.3)",
+      gradient: "linear-gradient(135deg, #4ed941, #00fc00c9)",
+      shadowColor: "rgba(36, 251, 57, 0.3)",
     },
     {
       id: "ol",
       title: t("exam.ol"),
       badge: t("exam.olBadge"),
-      icon: "📘",
+      icon: "/logos/ol-light.png",
       desc: t("exam.olDesc"),
       gradient: "linear-gradient(135deg, #3b82f6, #2563eb)",
       shadowColor: "rgba(59, 130, 246, 0.3)",
@@ -121,7 +122,7 @@ export default function DashboardPage() {
       id: "al",
       title: t("exam.al"),
       badge: t("exam.alBadge"),
-      icon: "🎓",
+      icon: "/logos/al-light.png",
       desc: t("exam.alDesc"),
       gradient: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
       shadowColor: "rgba(139, 92, 246, 0.3)",
@@ -265,8 +266,14 @@ export default function DashboardPage() {
                 margin: 0,
               }}
             >
-              {greetingText}, {user?.name?.split(" ")[0] || "Student"}{" "}
-              {greetingInfo.emoji}
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {greetingText}, {user?.name?.split(" ")[0] || "Student"}{" "}
+                <img
+                  style={{ width: "50px", height: "50px" }}
+                  src={greetingInfo.emoji}
+                  alt=""
+                />
+              </div>
             </h1>
             <p
               style={{
@@ -382,7 +389,7 @@ export default function DashboardPage() {
                   marginTop: "4px",
                 }}
               >
-                {t("dashboard.streak")} 🔥
+                {t("dashboard.streak")} 
               </div>
             </div>
           )}
@@ -588,7 +595,7 @@ export default function DashboardPage() {
                       style={{
                         width: "52px",
                         height: "52px",
-                        borderRadius: "14px",
+                        borderRadius: "100%",
                         background: exam.gradient,
                         display: "flex",
                         alignItems: "center",
@@ -598,7 +605,11 @@ export default function DashboardPage() {
                         boxShadow: `0 6px 16px ${exam.shadowColor}`,
                       }}
                     >
-                      {exam.icon}
+                      <img
+                        style={{ width: "55px", height: "55px" }}
+                        src={exam.icon}
+                        alt=""
+                      />
                     </div>
 
                     <div style={{ flex: 1 }}>
@@ -664,9 +675,7 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-            <div
-              
-            >
+            <div>
               <iframe
                 width="100%"
                 height="315"
