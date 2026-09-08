@@ -327,13 +327,11 @@ export default function LandingPage() {
     <div 
       style={{
         opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'opacity 0.4s ease',
         minHeight: '100vh',
         backgroundColor: isDark ? '#0B0F19' : '#F8FAFC',
         color: isDark ? '#F1F5F9' : '#0F172A',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-        overflowX: 'hidden'
       }}
     >
       {/* ── STICKY GLASSMORPHIC HEADER ── */}

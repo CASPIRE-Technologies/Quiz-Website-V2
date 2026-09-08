@@ -121,27 +121,32 @@ export default function LandingHeader() {
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 1000,
-          transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-          backgroundColor: isScrolled
-            ? isDark
-              ? "rgba(11, 15, 25, 0.88)"
-              : "rgba(255, 255, 255, 0.92)"
-            : isDark
-              ? "rgba(11, 15, 25, 0.45)"
-              : "rgba(255, 255, 255, 0.65)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: isScrolled
-            ? isDark
-              ? "1px solid rgba(255, 255, 255, 0.08)"
-              : "1px solid rgba(0, 0, 0, 0.06)"
-            : "1px solid transparent",
-          boxShadow: isScrolled
-            ? isDark
-              ? "0 10px 30px -10px rgba(0, 0, 0, 0.6)"
-              : "0 10px 30px -10px rgba(15, 23, 42, 0.08)"
-            : "none",
+          width: "100%",
+          zIndex: 9999,
+          transition: "background-color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease",
+          backgroundColor: isDark
+            ? isScrolled
+              ? "rgba(11, 15, 25, 0.95)"
+              : "rgba(11, 15, 25, 0.85)"
+            : isScrolled
+              ? "rgba(255, 255, 255, 0.96)"
+              : "rgba(255, 255, 255, 0.90)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: isDark
+            ? isScrolled
+              ? "1px solid rgba(255, 255, 255, 0.1)"
+              : "1px solid rgba(255, 255, 255, 0.06)"
+            : isScrolled
+              ? "1px solid rgba(0, 0, 0, 0.08)"
+              : "1px solid rgba(0, 0, 0, 0.05)",
+          boxShadow: isDark
+            ? isScrolled
+              ? "0 10px 30px -10px rgba(0, 0, 0, 0.7)"
+              : "0 4px 20px rgba(0, 0, 0, 0.3)"
+            : isScrolled
+              ? "0 10px 30px -10px rgba(15, 23, 42, 0.1)"
+              : "0 4px 20px rgba(15, 23, 42, 0.04)",
         }}
       >
         <div
